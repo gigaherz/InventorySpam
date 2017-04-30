@@ -48,10 +48,10 @@ public class ScrollingOverlay extends GuiScreen
         if (!Config.showItemAdditions && !Config.showItemRemovals)
             return;
 
-        if(event.getType() != RenderGameOverlayEvent.ElementType.CHAT)
+        if (event.getType() != RenderGameOverlayEvent.ElementType.CHAT)
             return;
 
-        synchronized(changeEntries)
+        synchronized (changeEntries)
         {
             ScaledResolution resolution = event.getResolution();
             int width = resolution.getScaledWidth();
@@ -67,35 +67,22 @@ public class ScrollingOverlay extends GuiScreen
             List<String> computedStrings = Lists.newArrayList();
 
             int rectWidth = 0;
-            String timesChar = Config.drawTimes ? "x" : "";
             for (ChangeInfo change : changeEntries)
             {
                 String s;
-                if (Config.drawName)
+
+                String name = change.item.stack.getDisplayName();
+                if (change.mode == 1)
                 {
-                    String name = change.item.stack.getDisplayName();
-                    if (change.mode == 1)
-                    {
-                        s = String.format("+%d%s %s", change.count, timesChar, name);
-                    }
-                    else
-                    {
-                        s = String.format("-%d%s %s", change.count, timesChar, name);
-                    }
+                    s = String.format("+%d %s", change.count, name);
                 }
                 else
                 {
-                    if (change.mode == 1)
-                    {
-                        s = String.format("+%d%s", change.count, timesChar);
-                    }
-                    else
-                    {
-                        s = String.format("-%d%s", change.count, timesChar);
-                    }
+                    s = String.format("-%d %s", change.count, name);
                 }
+
                 int w = font.getStringWidth(s);
-                rectWidth = Math.max(rectWidth,w);
+                rectWidth = Math.max(rectWidth, w);
                 computedStrings.add(s);
             }
 
@@ -105,17 +92,64 @@ public class ScrollingOverlay extends GuiScreen
             rectWidth += rightMargin;
 
             int lineHeight = font.FONT_HEIGHT;
-            if(Config.drawIcon)
+            if (Config.drawIcon)
                 lineHeight = 18;
 
             int rectHeight = lineHeight * number;
 
-            int x = width - 2 - rectWidth- Config.drawOffsetHorizontal;
-            int y = height - 2 - rectHeight- Config.drawOffsetVertical;
+            int x, y;
+            int align = 0;
+            switch (Config.drawPosition)
+            {
+                default:
+                case BottomRight:
+                    x = width - 2 - rectWidth - Config.drawOffsetHorizontal;
+                    y = height - 2 - rectHeight - Config.drawOffsetVertical;
+                    align = 1;
+                    break;
+                case Bottom:
+                    x = (width - rectWidth) / 2 - 2 + Config.drawOffsetHorizontal;
+                    y = height - 2 - rectHeight - Config.drawOffsetVertical;
+                    align = 0;
+                    break;
+                case BottomLeft:
+                    x = 2 + Config.drawOffsetHorizontal;
+                    y = height - 2 - rectHeight - Config.drawOffsetVertical;
+                    align = -1;
+                    break;
+                case Left:
+                    x = 2 + Config.drawOffsetHorizontal;
+                    y = (height - rectHeight) / 2 - 2 + Config.drawOffsetVertical;
+                    align = -1;
+                    break;
+                case TopLeft:
+                    x = 2 + Config.drawOffsetHorizontal;
+                    y = 2 + Config.drawOffsetVertical;
+                    align = -1;
+                    break;
+                case Top:
+                    x = (width - rectWidth) / 2 - 2 + Config.drawOffsetHorizontal;
+                    y = 2 + Config.drawOffsetVertical;
+                    align = 0;
+                    break;
+                case TopRight:
+                    x = width - 2 - rectWidth - Config.drawOffsetHorizontal;
+                    y = 2 + Config.drawOffsetVertical;
+                    align = 1;
+                    break;
+                case Right:
+                    x = width - 2 - rectWidth - Config.drawOffsetHorizontal;
+                    y = (height - rectHeight) / 2 - 2 + Config.drawOffsetVertical;
+                    align = 1;
+                    break;
+                case Center:
+                    x = (width - rectWidth) / 2 - 2 + Config.drawOffsetHorizontal;
+                    y = (height - rectHeight) / 2 - 2 + Config.drawOffsetVertical;
+                    align = 0;
+                    break;
+            }
 
-            //GlStateManager.enableBlend();
-
-            drawRect(x-2 , y-2, x+rectWidth+4, y+rectHeight+4, Integer.MIN_VALUE);
+            drawRect(x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
 
             for (int i = 0; i < changeEntries.size(); i++)
             {
@@ -126,14 +160,22 @@ public class ScrollingOverlay extends GuiScreen
                 int alpha = Math.min(255, change.ttl * 255 / FADE);
                 int color = alpha << 24 | (change.mode == 1 ? 0x7FFF7F : 0xFF5F5F);
 
+                int leftMargin = 0;
+                switch(align)
+                {
+                    case -1: leftMargin = 2; break;
+                    case 0: leftMargin = (rectWidth - w - rightMargin)/2; break;
+                    case 1: leftMargin = rectWidth - w - rightMargin; break;
+                }
+
                 GlStateManager.enableBlend();
-                font.drawStringWithShadow(s, width - 2 - rightMargin - w, y + topMargin, color);
+                font.drawStringWithShadow(s, x + leftMargin, y + topMargin, color);
 
                 if (Config.drawIcon)
                 {
                     RenderHelper.enableGUIStandardItemLighting();
-                    renderItem.renderItemAndEffectIntoGUI(change.item.stack, width - rightMargin- Config.drawOffsetHorizontal, y + 1);
-                    renderItem.renderItemOverlayIntoGUI(font, change.item.stack, width - rightMargin- Config.drawOffsetVertical, y + 1, null);
+                    renderItem.renderItemAndEffectIntoGUI(change.item.stack, x + 2 + w + leftMargin, y + 1);
+                    renderItem.renderItemOverlayIntoGUI(font, change.item.stack, x + 2 + w + leftMargin - rightMargin, y + 1, null);
                     RenderHelper.disableStandardItemLighting();
                 }
 
@@ -162,7 +204,7 @@ public class ScrollingOverlay extends GuiScreen
         if (previous == null || player.getEntityId() != id)
         {
             previous = new ItemStack[player.inventory.getSizeInventory()];
-            for (int i=0; i<player.inventory.getSizeInventory();i++)
+            for (int i = 0; i < player.inventory.getSizeInventory(); i++)
             {
                 previous[i] = player.inventory.getStackInSlot(i);
             }
@@ -172,10 +214,10 @@ public class ScrollingOverlay extends GuiScreen
         }
 
         // I don't htink this can happen but eh.
-        if(previous.length != player.inventory.getSizeInventory())
+        if (previous.length != player.inventory.getSizeInventory())
         {
             previous = Arrays.copyOf(previous, player.inventory.getSizeInventory());
-            for (int i=0; i<player.inventory.getSizeInventory();i++)
+            for (int i = 0; i < player.inventory.getSizeInventory(); i++)
             {
                 previous[i] = player.inventory.getStackInSlot(i);
             }
@@ -183,11 +225,11 @@ public class ScrollingOverlay extends GuiScreen
         }
 
         final List<Pair<ItemStack, ItemStack>> changes = Lists.newArrayList();
-        for (int i=0; i<player.inventory.getSizeInventory();i++)
+        for (int i = 0; i < player.inventory.getSizeInventory(); i++)
         {
             ItemStack stack = player.inventory.getStackInSlot(i);
             ItemStack old = previous[i];
-            if (!areSameishItem(stack,old)
+            if (!areSameishItem(stack, old)
                     || (stack.getCount() != old.getCount()))
             {
                 changes.add(Pair.of(old, stack));
@@ -196,12 +238,12 @@ public class ScrollingOverlay extends GuiScreen
         }
 
         ItemStack stackInCursor = player.inventory.getItemStack();
-        if(!areSameishItem(stackInCursor, previousInCursor)
+        if (!areSameishItem(stackInCursor, previousInCursor)
                 || (stackInCursor.getCount() != previousInCursor.getCount()))
             changes.add(Pair.of(previousInCursor, stackInCursor));
         previousInCursor = stackInCursor.copy();
 
-        if(changes.size() == 0)
+        if (changes.size() == 0)
             return;
 
         final List<ChangeInfo> changeList = Lists.newArrayList();
@@ -213,7 +255,7 @@ public class ScrollingOverlay extends GuiScreen
             ItemStack right = change.getRight();
             boolean rightEmpty = right.getCount() <= 0;
 
-            if(areSameishItem(left, right))
+            if (areSameishItem(left, right))
             {
                 int difference = right.getCount() - left.getCount();
                 if (difference > 0)
@@ -236,7 +278,7 @@ public class ScrollingOverlay extends GuiScreen
 
         changeList.removeIf((e) -> e.count == 0);
 
-        if(changeList.size() > 0)
+        if (changeList.size() > 0)
         {
             synchronized (changeEntries)
             {
@@ -288,7 +330,7 @@ public class ScrollingOverlay extends GuiScreen
             return;
         }
 
-        if(info.mode != mode)
+        if (info.mode != mode)
         {
             count = -count;
         }
@@ -334,7 +376,7 @@ public class ScrollingOverlay extends GuiScreen
         {
             if (!(obj instanceof ComparableItem))
                 return false;
-            ItemStack stack =  ((ComparableItem)obj).stack;
+            ItemStack stack = ((ComparableItem) obj).stack;
             return areSameishItem(stack, this.stack);
         }
 

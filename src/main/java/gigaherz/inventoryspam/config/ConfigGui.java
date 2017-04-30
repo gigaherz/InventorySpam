@@ -17,14 +17,6 @@ public class ConfigGui extends GuiConfig
         super(parent, getConfigElements(), InventorySpam.MODID, false, false, getTitle());
     }
 
-    @Override
-    public void onGuiClosed()
-    {
-        super.onGuiClosed();
-
-        Config.reload();
-    }
-
     private static String getTitle()
     {
         return I18n.format("text." + InventorySpam.MODID + ".config");
