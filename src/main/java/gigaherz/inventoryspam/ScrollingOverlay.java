@@ -176,7 +176,7 @@ public class ScrollingOverlay extends GuiScreen
                 {
                     RenderHelper.enableGUIStandardItemLighting();
                     renderItem.renderItemAndEffectIntoGUI(change.item.stack, x + 2 + w + leftMargin, y + 1);
-                    renderItem.renderItemOverlayIntoGUI(font, change.item.stack, x + 2 + w + leftMargin - rightMargin, y + 1, null);
+                    renderItem.renderItemOverlayIntoGUI(font, change.item.stack, x + 2 + w + leftMargin, y + 1, null);
                     RenderHelper.disableStandardItemLighting();
                 }
 
