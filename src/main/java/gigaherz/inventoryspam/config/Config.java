@@ -91,13 +91,13 @@ public class Config
         drawScaleProperty = config.get("General", "DrawScaleProperty", 0.0);
         drawScaleProperty.setMinValue(-2);
         drawScaleProperty.setMaxValue(2);
-        drawScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000% -- Use the ingame config gui");
+        drawScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000%(100x) -- Use the ingame config gui");
         drawScaleProperty.setConfigEntryClass(ExponentialNumberSliderEntry.class);
 
         iconScaleProperty = config.get("General", "IconScaleProperty", -0.2);
         iconScaleProperty.setMinValue(-2);
         iconScaleProperty.setMaxValue(2);
-        iconScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000% -- Use the ingame config gui");
+        iconScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000%(100x) -- Use the ingame config gui");
         iconScaleProperty.setConfigEntryClass(ExponentialNumberSliderEntry.class);
 
         reload();
