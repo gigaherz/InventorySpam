@@ -230,7 +230,7 @@ public class ScrollingOverlay extends GuiScreen
         {
             ItemStack stack = player.inventory.getStackInSlot(i);
             ItemStack old = previous[i];
-            if (!areSameishItem(stack, old)
+            if (!areLooselyTheSame(stack, old)
                     || (stack != null && old != null && stack.stackSize != old.stackSize))
             {
                 changes.add(Pair.of(old, stack));
@@ -239,7 +239,7 @@ public class ScrollingOverlay extends GuiScreen
         }
 
         ItemStack stackInCursor = player.inventory.getItemStack();
-        if (!areSameishItem(stackInCursor, previousInCursor)
+        if (!areLooselyTheSame(stackInCursor, previousInCursor)
                 || (stackInCursor != null && previousInCursor != null && stackInCursor.stackSize != previousInCursor.stackSize))
             changes.add(Pair.of(previousInCursor, stackInCursor));
         previousInCursor = safeCopy(stackInCursor);
@@ -293,9 +293,17 @@ public class ScrollingOverlay extends GuiScreen
         }
     }
 
+    private static boolean areLooselyTheSame(@Nullable ItemStack a, @Nullable ItemStack b)
+    {
+        return a == b
+                || isStackEmpty(a) && isStackEmpty(b)
+                || ItemStack.areItemsEqualIgnoreDurability(a,b);
+    }
+
     private static boolean areSameishItem(@Nullable ItemStack a, @Nullable ItemStack b)
     {
-        return isStackEmpty(a) && isStackEmpty(b)
+        return a == b
+                || isStackEmpty(a) && isStackEmpty(b)
                 || (ItemStack.areItemsEqual(a,b) && ItemStack.areItemStackTagsEqual(a, b));
     }
 
