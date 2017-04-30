@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -27,8 +28,8 @@ public class ScrollingOverlay extends GuiScreen
         MinecraftForge.EVENT_BUS.register(new ScrollingOverlay());
     }
 
-    private static int TTL = 240;
-    private static int FADE = 40;
+    private static final int TTL = 240;
+    private static final int FADE = 40;
 
     private RenderItem renderItem;
     private int id;
@@ -37,7 +38,7 @@ public class ScrollingOverlay extends GuiScreen
 
     private final List<ChangeInfo> changeEntries = Lists.newArrayList();
 
-    public ScrollingOverlay()
+    private ScrollingOverlay()
     {
         renderItem = Minecraft.getMinecraft().getRenderItem();
     }
@@ -64,26 +65,20 @@ public class ScrollingOverlay extends GuiScreen
             if (number == 0)
                 return;
 
-            List<String> computedStrings = Lists.newArrayList();
+            List<String[]> computedStrings = Lists.newArrayList();
 
             int rectWidth = 0;
             for (ChangeInfo change : changeEntries)
             {
-                String s;
-
                 String name = change.item.stack.getDisplayName();
-                if (change.mode == 1)
-                {
-                    s = String.format("+%d %s", change.count, name);
-                }
-                else
-                {
-                    s = String.format("-%d %s", change.count, name);
-                }
+                String italics = change.item.stack.hasDisplayName() ? ""+ TextFormatting.ITALIC : "";
+                String mode = change.mode == 1 ? "+" : "-";
+                String s1 = String.format("%s%d ", mode, change.count);
+                String s2 = String.format("%s%s", italics, name);
 
-                int w = font.getStringWidth(s);
+                int w = font.getStringWidth(s1) + font.getStringWidth(s2);
                 rectWidth = Math.max(rectWidth, w);
-                computedStrings.add(s);
+                computedStrings.add(new String[] {s1,s2});
             }
 
             int rightMargin = Config.drawIcon ? 18 : 0;
@@ -98,7 +93,7 @@ public class ScrollingOverlay extends GuiScreen
             int rectHeight = lineHeight * number;
 
             int x, y;
-            int align = 0;
+            int align;
             switch (Config.drawPosition)
             {
                 default:
@@ -153,8 +148,11 @@ public class ScrollingOverlay extends GuiScreen
 
             for (int i = 0; i < changeEntries.size(); i++)
             {
-                String s = computedStrings.get(i);
-                int w = font.getStringWidth(s);
+                String[] s = computedStrings.get(i);
+                String s1 = s[0];
+                String s2 = s[1];
+                int w1 = font.getStringWidth(s1);
+                int w = w1 + font.getStringWidth(s2);
 
                 ChangeInfo change = changeEntries.get(i);
                 int alpha = Math.min(255, change.ttl * 255 / FADE);
@@ -169,7 +167,8 @@ public class ScrollingOverlay extends GuiScreen
                 }
 
                 GlStateManager.enableBlend();
-                font.drawStringWithShadow(s, x + leftMargin, y + topMargin, color);
+                font.drawStringWithShadow(s1, x + leftMargin, y + topMargin, color);
+                font.drawStringWithShadow(s2, x + leftMargin + w1, y + topMargin, color);
 
                 if (Config.drawIcon)
                 {
@@ -347,12 +346,12 @@ public class ScrollingOverlay extends GuiScreen
 
     private static class ChangeInfo
     {
-        public final ComparableItem item;
-        public int mode;
-        public int count;
-        public int ttl;
+        final ComparableItem item;
+        int mode;
+        int count;
+        int ttl;
 
-        public ChangeInfo(ComparableItem item, int mode, int count, int ttl)
+        ChangeInfo(ComparableItem item, int mode, int count, int ttl)
         {
             this.item = item;
             this.mode = mode;
@@ -365,7 +364,7 @@ public class ScrollingOverlay extends GuiScreen
     {
         ItemStack stack;
 
-        public ComparableItem(ItemStack stack)
+        ComparableItem(ItemStack stack)
         {
             this.stack = stack.copy();
             this.stack.setCount(1);
