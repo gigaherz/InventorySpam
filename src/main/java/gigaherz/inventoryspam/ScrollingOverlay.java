@@ -18,7 +18,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,8 +34,7 @@ public class ScrollingOverlay extends GuiScreen
     private RenderItem renderItem;
     private int id;
     private ItemStack[] previous;
-
-    private ItemStack previousInCursor = null;
+    private ItemStack previousInCursor = ItemStack.EMPTY;
 
     private final List<ChangeInfo> changeEntries = Lists.newArrayList();
 
@@ -60,7 +58,7 @@ public class ScrollingOverlay extends GuiScreen
             int width = resolution.getScaledWidth();
             int height = resolution.getScaledHeight();
 
-            FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
+            FontRenderer font = Minecraft.getMinecraft().fontRenderer;
 
             int number = changeEntries.size();
 
@@ -231,18 +229,18 @@ public class ScrollingOverlay extends GuiScreen
             ItemStack stack = player.inventory.getStackInSlot(i);
             ItemStack old = previous[i];
             if (!areLooselyTheSame(stack, old)
-                    || (stack != null && old != null && stack.stackSize != old.stackSize))
+                    || (stack.getCount() != old.getCount()))
             {
                 changes.add(Pair.of(old, stack));
             }
-            previous[i] = safeCopy(stack);
+            previous[i] = stack.copy();
         }
 
         ItemStack stackInCursor = player.inventory.getItemStack();
         if (!areLooselyTheSame(stackInCursor, previousInCursor)
-                || (stackInCursor != null && previousInCursor != null && stackInCursor.stackSize != previousInCursor.stackSize))
+                || (stackInCursor.getCount() != previousInCursor.getCount()))
             changes.add(Pair.of(previousInCursor, stackInCursor));
-        previousInCursor = safeCopy(stackInCursor);
+        previousInCursor = stackInCursor.copy();
 
         if (changes.size() == 0)
             return;
@@ -251,14 +249,14 @@ public class ScrollingOverlay extends GuiScreen
         changes.forEach((change) ->
         {
             ItemStack left = change.getLeft();
-            boolean leftEmpty = isStackEmpty(left);
+            boolean leftEmpty = left.getCount() <= 0;
 
             ItemStack right = change.getRight();
-            boolean rightEmpty = isStackEmpty(right);
+            boolean rightEmpty = right.getCount() <= 0;
 
             if (areSameishItem(left, right))
             {
-                int difference = right.stackSize - left.stackSize;
+                int difference = right.getCount() - left.getCount();
                 if (difference > 0)
                     obtainedItem(changeList, left, difference);
                 else if (difference < 0)
@@ -268,11 +266,11 @@ public class ScrollingOverlay extends GuiScreen
             {
                 if (!leftEmpty)
                 {
-                    lostItem(changeList, left, left.stackSize);
+                    lostItem(changeList, left, left.getCount());
                 }
                 if (!rightEmpty)
                 {
-                    obtainedItem(changeList, right, right.stackSize);
+                    obtainedItem(changeList, right, right.getCount());
                 }
             }
         });
@@ -293,29 +291,28 @@ public class ScrollingOverlay extends GuiScreen
         }
     }
 
-    private static boolean areLooselyTheSame(@Nullable ItemStack a, @Nullable ItemStack b)
+    private static boolean areLooselyTheSame(ItemStack a, ItemStack b)
     {
         return a == b
                 || isStackEmpty(a) && isStackEmpty(b)
                 || ItemStack.areItemsEqualIgnoreDurability(a,b);
     }
 
-    private static boolean areSameishItem(@Nullable ItemStack a, @Nullable ItemStack b)
+    private static boolean areSameishItem(ItemStack a, ItemStack b)
     {
         return a == b
                 || isStackEmpty(a) && isStackEmpty(b)
                 || (ItemStack.areItemsEqual(a,b) && ItemStack.areItemStackTagsEqual(a, b));
     }
 
-    private static boolean isStackEmpty(@Nullable ItemStack stack)
+    private static boolean isStackEmpty(ItemStack stack)
     {
-        return stack == null || stack.stackSize <= 0;
+        return stack.getCount() <= 0;
     }
 
-    @Nullable
-    private static ItemStack safeCopy(@Nullable ItemStack stack)
+    private static ItemStack safeCopy(ItemStack stack)
     {
-        return stack == null ? null : stack.copy();
+        return stack.copy();
     }
 
     private void obtainedItem(List<ChangeInfo> changeList, ItemStack item, int added)
@@ -336,7 +333,7 @@ public class ScrollingOverlay extends GuiScreen
 
     private void accumulate(List<ChangeInfo> changeList, ItemStack stack, int mode, int count, boolean isLocal)
     {
-        if (stack.stackSize <= 0)
+        if (stack.getCount() <= 0)
             return;
 
         final ComparableItem name = new ComparableItem(stack);
@@ -388,7 +385,7 @@ public class ScrollingOverlay extends GuiScreen
         ComparableItem(ItemStack stack)
         {
             this.stack = stack.copy();
-            this.stack.stackSize = 1;
+            this.stack.setCount(1);
         }
 
         @Override
