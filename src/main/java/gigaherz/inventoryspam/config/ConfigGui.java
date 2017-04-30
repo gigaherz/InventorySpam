@@ -1,6 +1,5 @@
 package gigaherz.inventoryspam.config;
 
-import com.google.common.collect.Lists;
 import gigaherz.inventoryspam.InventorySpam;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
@@ -24,12 +23,6 @@ public class ConfigGui extends GuiConfig
 
     private static List<IConfigElement> getConfigElements()
     {
-        List<IConfigElement> configElements = Lists.newArrayList();
-
-        ConfigElement parent = new ConfigElement(Config.getGeneralCategory());
-
-        configElements.addAll(parent.getChildElements());
-
-        return configElements;
+        return new ConfigElement(Config.getGeneralCategory()).getChildElements();
     }
 }

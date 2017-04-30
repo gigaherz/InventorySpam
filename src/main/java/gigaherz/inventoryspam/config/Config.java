@@ -4,6 +4,7 @@ import gigaherz.inventoryspam.InventorySpam;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import net.minecraftforge.fml.client.config.GuiConfigEntries;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -22,6 +23,8 @@ public class Config
     private static Property drawOffsetVerticalProperty;
     private static Property drawOffsetHorizontalProperty;
     private static Property drawPositionProperty;
+    private static Property drawScaleProperty;
+    private static Property iconScaleProperty;
 
     public static boolean showItemAdditions;
     public static boolean showItemRemovals;
@@ -29,6 +32,8 @@ public class Config
     public static int drawOffsetHorizontal;
     public static int drawOffsetVertical;
     public static DrawPosition drawPosition;
+    public static double drawScale;
+    public static double iconScale;
 
     public enum DrawPosition
     {
@@ -57,14 +62,16 @@ public class Config
         showItemRemovalsProperty = config.get("General", "ShowItemRemovals", true);
 
         drawIconProperty = config.get("General", "DrawIcon", true);
+
         drawOffsetHorizontalProperty = config.get("General", "DrawOffsetHorizontal", 0);
-        drawOffsetVerticalProperty = config.get("General", "DrawOffsetVertical", 18);
-
         drawOffsetHorizontalProperty.setMinValue(0);
-        drawOffsetVerticalProperty.setMinValue(0);
-
         drawOffsetHorizontalProperty.setMaxValue(256);
+        drawOffsetHorizontalProperty.setConfigEntryClass(GuiConfigEntries.NumberSliderEntry.class);
+
+        drawOffsetVerticalProperty = config.get("General", "DrawOffsetVertical", 18);
+        drawOffsetVerticalProperty.setMinValue(0);
         drawOffsetVerticalProperty.setMaxValue(256);
+        drawOffsetVerticalProperty.setConfigEntryClass(GuiConfigEntries.NumberSliderEntry.class);
 
         drawPositionProperty = config.get("General", "SnapPosition", DrawPosition.BottomRight.toString());
         drawPositionProperty.setValidValues(Arrays.stream(DrawPosition.values())
@@ -80,6 +87,18 @@ public class Config
                 "  TopRight\n" +
                 "  Right\n" +
                 "  Center");
+
+        drawScaleProperty = config.get("General", "DrawScaleProperty", 0.0);
+        drawScaleProperty.setMinValue(-2);
+        drawScaleProperty.setMaxValue(2);
+        drawScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000% -- Use the ingame config gui");
+        drawScaleProperty.setConfigEntryClass(ExponentialNumberSliderEntry.class);
+
+        iconScaleProperty = config.get("General", "IconScaleProperty", -0.2);
+        iconScaleProperty.setMinValue(-2);
+        iconScaleProperty.setMaxValue(2);
+        iconScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000% -- Use the ingame config gui");
+        iconScaleProperty.setConfigEntryClass(ExponentialNumberSliderEntry.class);
 
         reload();
 
@@ -103,6 +122,9 @@ public class Config
 
         drawOffsetHorizontal = drawOffsetHorizontalProperty.getInt();
         drawOffsetVertical = drawOffsetVerticalProperty.getInt();
+
+        drawScale = drawScaleProperty.getDouble();
+        iconScale = iconScaleProperty.getDouble();
 
         try
         {
