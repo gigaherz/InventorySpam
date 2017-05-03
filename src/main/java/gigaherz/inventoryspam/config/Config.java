@@ -123,8 +123,8 @@ public class Config
         drawOffsetHorizontal = drawOffsetHorizontalProperty.getInt();
         drawOffsetVertical = drawOffsetVerticalProperty.getInt();
 
-        drawScale = drawScaleProperty.getDouble();
-        iconScale = iconScaleProperty.getDouble();
+        drawScale = Math.pow(10,drawScaleProperty.getDouble());
+        iconScale = Math.pow(10,iconScaleProperty.getDouble());
 
         try
         {
