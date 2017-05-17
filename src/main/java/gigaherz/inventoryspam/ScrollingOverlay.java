@@ -198,14 +198,14 @@ public class ScrollingOverlay extends GuiScreen
     }
 
     @SubscribeEvent
-    public void clientTick(TickEvent.PlayerTickEvent event)
+    public void clientTick(TickEvent.ClientTickEvent event)
     {
         if (!Config.showItemAdditions && !Config.showItemRemovals)
             return;
 
-        EntityPlayer player = event.player;
+        EntityPlayer player = Minecraft.getMinecraft().player;
 
-        if (!player.world.isRemote)
+        if (player == null)
             return;
 
         synchronized (changeEntries)
