@@ -202,6 +202,9 @@ public class ScrollingOverlay extends GuiScreen
     @SubscribeEvent
     public void clientTick(TickEvent.ClientTickEvent event)
     {
+        if (event.phase != TickEvent.Phase.END)
+            return;
+
         if (!Config.showItemAdditions && !Config.showItemRemovals)
             return;
 
