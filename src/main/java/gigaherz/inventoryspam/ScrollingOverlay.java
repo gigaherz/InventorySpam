@@ -1,6 +1,7 @@
 package gigaherz.inventoryspam;
 
 import com.google.common.collect.Lists;
+import com.google.common.eventbus.Subscribe;
 import gigaherz.inventoryspam.config.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -10,16 +11,18 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
 
 public class ScrollingOverlay extends GuiScreen
@@ -33,8 +36,10 @@ public class ScrollingOverlay extends GuiScreen
     private static final int FADE = 40;
 
     private RenderItem renderItem;
-    private int id;
+    private int dim;
+    private int dimLoadTicks;
     private ItemStack[] previous;
+    private EntityPlayer playerEntity;
 
     private ItemStack previousInCursor = null;
 
@@ -80,7 +85,7 @@ public class ScrollingOverlay extends GuiScreen
             {
                 String name = change.item.stack.getDisplayName();
                 String italics = change.item.stack.hasDisplayName() ? ""+ TextFormatting.ITALIC : "";
-                String mode = change.mode == 1 ? "+" : "-";
+                String mode = change.mode == ChangeMode.Obtained ? "+" : "-";
                 String s1 = String.format("%s%d ", mode, change.count);
                 String s2 = String.format("%s%s", italics, name);
 
@@ -166,7 +171,7 @@ public class ScrollingOverlay extends GuiScreen
 
                 ChangeInfo change = changeEntries.get(i);
                 int alpha = Math.min(255, change.ttl * 255 / FADE);
-                int color = alpha << 24 | (change.mode == 1 ? 0x7FFF7F : 0xFF5F5F);
+                int color = alpha << 24 | (change.mode == ChangeMode.Obtained ? 0x7FFF7F : 0xFF5F5F);
 
                 int leftMargin = 0;
                 switch(align)
@@ -213,32 +218,50 @@ public class ScrollingOverlay extends GuiScreen
         if (player == null)
             return;
 
+        if (player != playerEntity)
+        {
+            if (player.inventoryContainer != null)
+            {
+                player.inventoryContainer = new ContainerWrapper((ContainerPlayer) player.inventoryContainer, player, () ->
+                {
+                    previous = null;
+                    dimLoadTicks = 0;
+                });
+                playerEntity = player;
+            }
+            previous = null;
+        }
+
+        if (player.dimension != dim)
+        {
+            previous = null;
+            dimLoadTicks = 200;
+            dim = player.dimension;
+        }
+
+        if (dimLoadTicks > 0)
+        {
+            previous = null;
+            dimLoadTicks--;
+            return;
+        }
+
         synchronized (changeEntries)
         {
             changeEntries.forEach((a) -> --a.ttl);
             changeEntries.removeIf((e) -> e.ttl <= 0 || e.count == 0);
         }
 
-        if (previous == null || player.getEntityId() != id)
+        if (previous == null ||
+                // I don't think this can happen but eh.
+                previous.length != player.inventory.getSizeInventory())
         {
             previous = new ItemStack[player.inventory.getSizeInventory()];
             for (int i = 0; i < player.inventory.getSizeInventory(); i++)
             {
-                previous[i] = player.inventory.getStackInSlot(i);
+                previous[i] = safeCopy(player.inventory.getStackInSlot(i));
             }
             previousInCursor = player.inventory.getItemStack();
-            id = player.getEntityId();
-            return;
-        }
-
-        // I don't htink this can happen but eh.
-        if (previous.length != player.inventory.getSizeInventory())
-        {
-            previous = Arrays.copyOf(previous, player.inventory.getSizeInventory());
-            for (int i = 0; i < player.inventory.getSizeInventory(); i++)
-            {
-                previous[i] = player.inventory.getStackInSlot(i);
-            }
             return;
         }
 
@@ -340,7 +363,7 @@ public class ScrollingOverlay extends GuiScreen
         if (added <= 0)
             return;
 
-        accumulate(changeList, item, 1, added, true);
+        accumulate(changeList, item, ChangeMode.Obtained, added, true);
     }
 
     private void lostItem(List<ChangeInfo> changeList, ItemStack item, int removed)
@@ -348,10 +371,10 @@ public class ScrollingOverlay extends GuiScreen
         if (removed <= 0)
             return;
 
-        accumulate(changeList, item, 2, removed, true);
+        accumulate(changeList, item, ChangeMode.Lost, removed, true);
     }
 
-    private void accumulate(List<ChangeInfo> changeList, ItemStack stack, int mode, int count, boolean isLocal)
+    private void accumulate(List<ChangeInfo> changeList, ItemStack stack, ChangeMode mode, int count, boolean isLocal)
     {
         if (stack.stackSize <= 0)
             return;
@@ -378,24 +401,29 @@ public class ScrollingOverlay extends GuiScreen
         if (info.count < 0)
         {
             info.count = -info.count;
-            info.mode = info.mode == 1 ? 2 : 1;
+            info.mode = info.mode == ChangeMode.Lost ? ChangeMode.Obtained : ChangeMode.Lost;
         }
     }
 
     private static class ChangeInfo
     {
         final ComparableItem item;
-        int mode;
+        ChangeMode mode;
         int count;
         int ttl;
 
-        ChangeInfo(ComparableItem item, int mode, int count, int ttl)
+        ChangeInfo(ComparableItem item, ChangeMode mode, int count, int ttl)
         {
             this.item = item;
             this.mode = mode;
             this.count = count;
             this.ttl = ttl;
         }
+    }
+
+    private enum ChangeMode
+    {
+        Obtained, Lost;
     }
 
     private static class ComparableItem
