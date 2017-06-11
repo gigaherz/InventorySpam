@@ -7,21 +7,21 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "0.0.6"
+version = "0.0.7"
 group = "gigaherz.inventoryspam" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "InventorySpam-1.11.2"
+archivesBaseName = "InventorySpam-1.12.0"
 
 minecraft {
-    version = "1.11.2-13.20.0.2285"
+    version = "1.12-14.21.0.2321"
     runDir = "run"
 
-    mappings = "snapshot_20170429"
+    mappings = "snapshot_20170611"
 
     replace "@VERSION@", project.version
     replaceIn "InventorySpam.java"

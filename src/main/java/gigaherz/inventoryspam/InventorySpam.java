@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
         clientSideOnly = true,
         acceptableRemoteVersions = "*",
         canBeDeactivated = true,
-        acceptedMinecraftVersions = "[1.11.0,1.12.0)",
+        acceptedMinecraftVersions = "[1.11.0,1.13.0)",
         guiFactory = "gigaherz.inventoryspam.config.ConfigGuiFactory")
 public class InventorySpam
 {
