@@ -66,10 +66,10 @@ public class ScrollingOverlay extends GuiScreen
                 return;
 
             GlStateManager.pushMatrix();
-            GlStateManager.scale(Config.drawScale,Config.drawScale,1);
+            GlStateManager.scale(Config.drawScale, Config.drawScale, 1);
 
-            width = (int)(width / Config.drawScale);
-            height = (int)(height / Config.drawScale);
+            width = (int) (width / Config.drawScale);
+            height = (int) (height / Config.drawScale);
 
             List<String[]> computedStrings = Lists.newArrayList();
 
@@ -77,26 +77,26 @@ public class ScrollingOverlay extends GuiScreen
             for (ChangeInfo change : changeEntries)
             {
                 String name = change.item.stack.getDisplayName();
-                String italics = change.item.stack.hasDisplayName() ? ""+ TextFormatting.ITALIC : "";
+                String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
                 String mode = change.mode == 1 ? "+" : "-";
                 String s1 = String.format("%s%d ", mode, change.count);
                 String s2 = String.format("%s%s", italics, name);
 
                 int w = font.getStringWidth(s1) + font.getStringWidth(s2);
                 rectWidth = Math.max(rectWidth, w);
-                computedStrings.add(new String[] {s1,s2});
+                computedStrings.add(new String[]{s1, s2});
             }
 
-            int iconSize = (int)(16* Config.iconScale);
-            int rightMargin = Config.drawIcon ? (2+iconSize) : 0;
-            int topMargin1 = 2 + (Config.drawIcon ? Math.max(0, (iconSize - font.FONT_HEIGHT)/2) : 0);
-            int topMargin2 = 1 + Math.max(0, -(iconSize - font.FONT_HEIGHT)/2);
+            int iconSize = (int) (16 * Config.iconScale);
+            int rightMargin = Config.drawIcon ? (2 + iconSize) : 0;
+            int topMargin1 = 2 + (Config.drawIcon ? Math.max(0, (iconSize - font.FONT_HEIGHT) / 2) : 0);
+            int topMargin2 = 1 + Math.max(0, -(iconSize - font.FONT_HEIGHT) / 2);
 
             rectWidth += rightMargin;
 
             int lineHeight = font.FONT_HEIGHT;
             if (Config.drawIcon)
-                lineHeight = Math.max(2+iconSize, lineHeight);
+                lineHeight = Math.max(2 + iconSize, lineHeight);
 
             int rectHeight = lineHeight * number;
 
@@ -167,11 +167,17 @@ public class ScrollingOverlay extends GuiScreen
                 int color = alpha << 24 | (change.mode == 1 ? 0x7FFF7F : 0xFF5F5F);
 
                 int leftMargin = 0;
-                switch(align)
+                switch (align)
                 {
-                    case -1: leftMargin = 2; break;
-                    case 0: leftMargin = (rectWidth - w - rightMargin)/2; break;
-                    case 1: leftMargin = rectWidth - w - rightMargin; break;
+                    case -1:
+                        leftMargin = 2;
+                        break;
+                    case 0:
+                        leftMargin = (rectWidth - w - rightMargin) / 2;
+                        break;
+                    case 1:
+                        leftMargin = rectWidth - w - rightMargin;
+                        break;
                 }
 
                 GlStateManager.enableBlend();
@@ -182,10 +188,10 @@ public class ScrollingOverlay extends GuiScreen
                 {
                     GlStateManager.pushMatrix();
                     GlStateManager.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
-                    GlStateManager.scale(Config.iconScale, Config.iconScale,1);
+                    GlStateManager.scale(Config.iconScale, Config.iconScale, 1);
                     RenderHelper.enableGUIStandardItemLighting();
-                    renderItem.renderItemAndEffectIntoGUI(change.item.stack, 0,0);
-                    renderItem.renderItemOverlayIntoGUI(font, change.item.stack, 0,0, null);
+                    renderItem.renderItemAndEffectIntoGUI(change.item.stack, 0, 0);
+                    renderItem.renderItemOverlayIntoGUI(font, change.item.stack, 0, 0, null);
                     RenderHelper.disableStandardItemLighting();
                     GlStateManager.popMatrix();
                 }
@@ -312,14 +318,14 @@ public class ScrollingOverlay extends GuiScreen
     {
         return a == b
                 || isStackEmpty(a) && isStackEmpty(b)
-                || ItemStack.areItemsEqualIgnoreDurability(a,b);
+                || ItemStack.areItemsEqualIgnoreDurability(a, b);
     }
 
     private static boolean areSameishItem(ItemStack a, ItemStack b)
     {
         return a == b
                 || isStackEmpty(a) && isStackEmpty(b)
-                || (ItemStack.areItemsEqual(a,b) && ItemStack.areItemStackTagsEqual(a, b));
+                || (ItemStack.areItemsEqual(a, b) && ItemStack.areItemStackTagsEqual(a, b));
     }
 
     private static boolean isStackEmpty(ItemStack stack)

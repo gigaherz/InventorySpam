@@ -48,7 +48,10 @@ public class Config
         Center
     }
 
-    public static ConfigCategory getGeneralCategory() { return general; }
+    public static ConfigCategory getGeneralCategory()
+    {
+        return general;
+    }
 
     public static void init(File configurationFile)
     {
@@ -123,14 +126,14 @@ public class Config
         drawOffsetHorizontal = drawOffsetHorizontalProperty.getInt();
         drawOffsetVertical = drawOffsetVerticalProperty.getInt();
 
-        drawScale = Math.pow(10,drawScaleProperty.getDouble());
-        iconScale = Math.pow(10,iconScaleProperty.getDouble());
+        drawScale = Math.pow(10, drawScaleProperty.getDouble());
+        iconScale = Math.pow(10, iconScaleProperty.getDouble());
 
         try
         {
             drawPosition = DrawPosition.valueOf(drawPositionProperty.getString());
         }
-        catch(IllegalArgumentException ex)
+        catch (IllegalArgumentException ex)
         {
             drawPositionProperty.setToDefault();
             drawPosition = DrawPosition.valueOf(drawPositionProperty.getString());
@@ -142,7 +145,7 @@ public class Config
     {
         if (InventorySpam.MODID.equals(event.getModID()))
         {
-            if(config.hasChanged())
+            if (config.hasChanged())
                 config.save();
             reload();
         }

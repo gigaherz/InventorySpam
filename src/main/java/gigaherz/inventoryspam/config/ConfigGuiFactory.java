@@ -25,22 +25,8 @@ public class ConfigGuiFactory implements IModGuiFactory
         return new ConfigGui(parentScreen);
     }
 
-    @Deprecated
-    @Override
-    public Class<? extends GuiScreen> mainConfigGuiClass()
-    {
-        return ConfigGui.class;
-    }
-
     @Override
     public Set<RuntimeOptionCategoryElement> runtimeGuiCategories()
-    {
-        return null;
-    }
-
-    @Deprecated
-    @Override
-    public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element)
     {
         return null;
     }
