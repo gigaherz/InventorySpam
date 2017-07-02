@@ -150,5 +150,4 @@ public class ContainerWrapper extends ContainerPlayer
     {
         return original.canDragIntoSlot(slotIn);
     }
-
 }

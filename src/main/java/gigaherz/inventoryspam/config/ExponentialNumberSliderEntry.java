@@ -22,7 +22,9 @@ public class ExponentialNumberSliderEntry extends GuiConfigEntries.ButtonEntry
     }
 
     @Override
-    public void valueButtonPressed(int slotIndex) {}
+    public void valueButtonPressed(int slotIndex)
+    {
+    }
 
     @Override
     public boolean isDefault()
@@ -76,7 +78,7 @@ public class ExponentialNumberSliderEntry extends GuiConfigEntries.ButtonEntry
     @Override
     public Object[] getCurrentValues()
     {
-        return new Object[] { getCurrentValue() };
+        return new Object[]{getCurrentValue()};
     }
 
     private static class GuiExponentialSlider extends GuiSlider
@@ -100,12 +102,12 @@ public class ExponentialNumberSliderEntry extends GuiConfigEntries.ButtonEntry
                 this.sliderValue = 1.0F;
             }
 
-            if(Math.abs(this.sliderValue-0.5) < 0.006)
+            if (Math.abs(this.sliderValue - 0.5) < 0.006)
                 this.sliderValue = 0.5;
 
-            if(drawString)
+            if (drawString)
             {
-                String val = Integer.toString((int)Math.round(100 * Math.pow(10, getValue())));
+                String val = Integer.toString((int) Math.round(100 * Math.pow(10, getValue())));
                 displayString = dispString + val + suffix;
             }
 

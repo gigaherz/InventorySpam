@@ -1,7 +1,6 @@
 package gigaherz.inventoryspam;
 
 import gigaherz.inventoryspam.config.Config;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
