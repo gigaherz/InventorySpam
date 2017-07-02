@@ -25,6 +25,8 @@ public class Config
     private static Property drawPositionProperty;
     private static Property drawScaleProperty;
     private static Property iconScaleProperty;
+    private static Property softLimitProperty;
+    private static Property fadeLimitProperty;
 
     public static boolean showItemAdditions;
     public static boolean showItemRemovals;
@@ -34,6 +36,8 @@ public class Config
     public static DrawPosition drawPosition;
     public static double drawScale;
     public static double iconScale;
+    public static int softLimit;
+    public static int fadeLimit;
 
     public enum DrawPosition
     {
@@ -103,6 +107,14 @@ public class Config
         iconScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000%(100x) -- Use the ingame config gui");
         iconScaleProperty.setConfigEntryClass(ExponentialNumberSliderEntry.class);
 
+        softLimitProperty = config.get("General", "SoftLimit", 6);
+        softLimitProperty.setMinValue(1);
+        softLimitProperty.setComment("The maximum number of items in the queue before they start fading out artificially");
+
+        fadeLimitProperty = config.get("General", "FadeLimit", 3);
+        fadeLimitProperty.setMinValue(1);
+        fadeLimitProperty.setComment("The number of items that will be faded out after the soft limit is reached");
+
         reload();
 
         if (config.hasChanged()
@@ -112,6 +124,9 @@ public class Config
                 || !drawOffsetHorizontalProperty.wasRead()
                 || !drawOffsetHorizontalProperty.wasRead()
                 || !drawPositionProperty.wasRead()
+                || !iconScaleProperty.wasRead()
+                || !softLimitProperty.wasRead()
+                || !fadeLimitProperty.wasRead()
                 )
             config.save();
     }
@@ -128,6 +143,9 @@ public class Config
 
         drawScale = Math.pow(10, drawScaleProperty.getDouble());
         iconScale = Math.pow(10, iconScaleProperty.getDouble());
+
+        softLimit = softLimitProperty.getInt();
+        fadeLimit = fadeLimitProperty.getInt();
 
         try
         {
