@@ -60,7 +60,6 @@ public class ContainerWrapper extends ContainerPlayer
     }
 
     @Override
-    @Nullable
     public ItemStack transferStackInSlot(EntityPlayer playerIn, int index)
     {
         return original.transferStackInSlot(playerIn, index);
@@ -117,7 +116,6 @@ public class ContainerWrapper extends ContainerPlayer
     }
 
     @Override
-    @Nullable
     public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player)
     {
         return original.slotClick(slotId, dragType, clickTypeIn, player);

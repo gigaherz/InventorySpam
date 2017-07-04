@@ -18,10 +18,10 @@ group = "gigaherz.inventoryspam" // http://maven.apache.org/guides/mini/guide-na
 archivesBaseName = "InventorySpam-1.11.2"
 
 minecraft {
-    version = "1.11.2-13.20.0.2285"
+    version = "1.11.2-13.20.1.2393"
     runDir = "run"
 
-    mappings = "snapshot_20170429"
+    mappings = "stable_32"
 
     replace "@VERSION@", project.version
     replaceIn "InventorySpam.java"
