@@ -4,9 +4,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -21,6 +23,14 @@ public class ContainerWrapper extends ContainerPlayer
         super(player.inventory, original.isLocalWorld, player);
         this.original = original;
         this.callback = callback;
+        this.craftMatrix = original.craftMatrix;
+        this.craftResult = original.craftResult;
+        this.isLocalWorld = original.isLocalWorld;
+
+        this.inventoryItemStacks = original.inventoryItemStacks;
+        this.inventorySlots = original.inventorySlots;
+        this.windowId = original.windowId;
+        this.listeners = ReflectionHelper.getPrivateValue(Container.class, original, "field_75149_d", "listeners");
     }
 
     @Override
@@ -28,6 +38,13 @@ public class ContainerWrapper extends ContainerPlayer
     {
         if (original != null)
             original.onCraftMatrixChanged(inventoryIn);
+    }
+
+    @Override
+    protected Slot addSlotToContainer(Slot slotIn)
+    {
+        // Ignore -- the original container keeps the list of slots
+        return slotIn;
     }
 
     @Override
