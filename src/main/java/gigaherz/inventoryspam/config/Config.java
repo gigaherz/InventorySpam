@@ -112,7 +112,7 @@ public class Config
         softLimitProperty.setComment("The maximum number of items in the queue before they start fading out artificially");
 
         fadeLimitProperty = config.get("General", "FadeLimit", 3);
-        fadeLimitProperty.setMinValue(1);
+        fadeLimitProperty.setMinValue(0);
         fadeLimitProperty.setComment("The number of items that will be faded out after the soft limit is reached");
 
         reload();
