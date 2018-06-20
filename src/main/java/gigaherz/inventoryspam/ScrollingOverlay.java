@@ -20,6 +20,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class ScrollingOverlay extends GuiScreen
@@ -79,7 +80,7 @@ public class ScrollingOverlay extends GuiScreen
 
         List<Triple<ChangeInfo, String[], Integer>> computedStrings = Lists.newArrayList();
 
-        int rectWidth = 0;
+        int rectWidth;
         int number;
 
         synchronized (changeEntries)
@@ -87,31 +88,9 @@ public class ScrollingOverlay extends GuiScreen
             if (changeEntries.size() == 0)
                 return;
 
-            int weightOffset = Math.min(
-                    Math.min(0, Config.softLimit - changeEntries.size()) + 5,
-                    hard_limit - changeEntries.size());
-
-            for (int i = 0; i < changeEntries.size(); i++)
-            {
-                int offset = weightOffset + i;
-
-                if (offset > 0)
-                {
-                    ChangeInfo change = changeEntries.get(i);
-                    String name = change.item.stack.getDisplayName();
-                    String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
-                    String mode = change.mode == ChangeMode.Obtained ? "+" : "-";
-                    String s1 = String.format("%s%d ", mode, change.count);
-                    String s2 = String.format("%s%s", italics, name);
-
-                    int w = font.getStringWidth(s1) + font.getStringWidth(s2);
-                    rectWidth = Math.max(rectWidth, w);
-                    computedStrings.add(Triple.of(change, new String[]{s1, s2}, Math.min(Config.fadeLimit, offset)));
-                }
-            }
+            rectWidth = computeStrings(computedStrings, font);
 
             number = computedStrings.size();
-
             if (number == 0)
                 return;
         }
@@ -180,14 +159,18 @@ public class ScrollingOverlay extends GuiScreen
         for (int i = 0; i < computedStrings.size(); i++)
         {
             Triple<ChangeInfo, String[], Integer> e = computedStrings.get(i);
+            ChangeInfo change = e.getLeft();
             String[] s = e.getMiddle();
+            int fade = e.getRight();
+
             String s1 = s[0];
             String s2 = s[1];
             int w1 = font.getStringWidth(s1);
             int w = w1 + font.getStringWidth(s2);
 
-            ChangeInfo change = e.getLeft();
-            int alpha = Math.min(255, Math.min(e.getRight() * 255 / Config.fadeLimit, change.ttl * 255 / FADE));
+            int forcedFade = Config.fadeLimit > 0 ? (fade * 255 / (Config.fadeLimit+2)) : 255;
+            int ttlFade = change.ttl * 255 / FADE;
+            int alpha = Math.min(255, Math.min(forcedFade, ttlFade));
             int color = alpha << 24 | (change.mode == ChangeMode.Obtained ? 0x7FFF7F : 0xFF5F5F);
 
             int leftMargin = 0;
@@ -224,6 +207,37 @@ public class ScrollingOverlay extends GuiScreen
         }
 
         GlStateManager.popMatrix();
+    }
+
+    private int computeStrings(List<Triple<ChangeInfo, String[], Integer>> computedStrings, FontRenderer font)
+    {
+        int rectWidth = 0;
+        int itemsToShow = Math.min(Math.min(hard_limit, Config.softLimit + Config.fadeLimit), changeEntries.size());
+        int offset = Math.max(0, changeEntries.size() - itemsToShow);
+        int fadeOffset = changeEntries.size() - Config.softLimit - Config.fadeLimit;
+
+        for (int i = offset; i < changeEntries.size(); i++)
+        {
+            ChangeInfo change = changeEntries.get(i);
+            String[] parts = getChangeStrings(change);
+
+            int w = Arrays.stream(parts).mapToInt(font::getStringWidth).sum();
+
+            rectWidth = Math.max(rectWidth, w);
+
+            computedStrings.add(Triple.of(change, parts, Math.min(Config.fadeLimit+2, 1+i-fadeOffset)));
+        }
+        return rectWidth;
+    }
+
+    private String[] getChangeStrings(ChangeInfo change)
+    {
+        String name = change.item.stack.getDisplayName();
+        String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
+        String mode = change.mode == ChangeMode.Obtained ? "+" : "-";
+        String s1 = String.format("%s%d ", mode, change.count);
+        String s2 = String.format("%s%s", italics, name);
+        return new String[]{s1, s2};
     }
 
     @SubscribeEvent
