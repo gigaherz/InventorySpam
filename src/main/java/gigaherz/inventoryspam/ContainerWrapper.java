@@ -5,11 +5,14 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
 import java.util.List;
 
 public class ContainerWrapper extends ContainerPlayer
@@ -17,6 +20,9 @@ public class ContainerWrapper extends ContainerPlayer
     private final ContainerPlayer original;
     private final Runnable callback;
 
+    private static final Field f_listeners = ObfuscationReflectionHelper.findField(Container.class, FMLLaunchHandler.isDeobfuscatedEnvironment() ? "listeners" : "field_75149_d");
+
+    @SuppressWarnings("unchecked")
     public ContainerWrapper(ContainerPlayer original, EntityPlayer player, Runnable callback)
     {
         super(player.inventory, original.isLocalWorld, player);
@@ -29,7 +35,14 @@ public class ContainerWrapper extends ContainerPlayer
         this.inventoryItemStacks = original.inventoryItemStacks;
         this.inventorySlots = original.inventorySlots;
         this.windowId = original.windowId;
-        this.listeners = ReflectionHelper.getPrivateValue(Container.class, original, "field_75149_d", "listeners");
+        try
+        {
+            this.listeners = (List<IContainerListener>) f_listeners.get(original);
+        }
+        catch (IllegalAccessException e)
+        {
+            // ignore.
+        }
     }
 
     @Override

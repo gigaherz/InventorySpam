@@ -160,15 +160,19 @@ public class ScrollingOverlay extends GuiScreen
         {
             Triple<ChangeInfo, String[], Integer> e = computedStrings.get(i);
             ChangeInfo change = e.getLeft();
-            String[] s = e.getMiddle();
+            String[] strings = e.getMiddle();
             int fade = e.getRight();
 
-            String s1 = s[0];
-            String s2 = s[1];
-            int w1 = font.getStringWidth(s1);
-            int w = w1 + font.getStringWidth(s2);
+            int w = 0;
+            int[] widths = new int[strings.length];
+            for(int n = 0;n<strings.length;n++)
+            {
+                String str = strings[n];
+                int wn = widths[n] = font.getStringWidth(str);
+                w += wn;
+            }
 
-            int forcedFade = Config.fadeLimit > 0 ? (fade * 255 / (Config.fadeLimit+2)) : 255;
+            int forcedFade = Config.fadeLimit > 0 ? (fade * 255 / (Config.fadeLimit + 2)) : 255;
             int ttlFade = change.ttl * 255 / FADE;
             int alpha = Math.min(255, Math.min(forcedFade, ttlFade));
             int color = alpha << 24 | (change.mode == ChangeMode.Obtained ? 0x7FFF7F : 0xFF5F5F);
@@ -188,8 +192,12 @@ public class ScrollingOverlay extends GuiScreen
             }
 
             GlStateManager.enableBlend();
-            font.drawStringWithShadow(s1, x + leftMargin, y + topMargin1, color);
-            font.drawStringWithShadow(s2, x + leftMargin + w1, y + topMargin1, color);
+            int wAcc = 0;
+            for(int n = 0;n<strings.length;n++)
+            {
+                font.drawStringWithShadow(strings[n], x + leftMargin + wAcc, y + topMargin1, color);
+                wAcc += widths[n];
+            }
 
             if (Config.drawIcon)
             {
@@ -225,19 +233,26 @@ public class ScrollingOverlay extends GuiScreen
 
             rectWidth = Math.max(rectWidth, w);
 
-            computedStrings.add(Triple.of(change, parts, Math.min(Config.fadeLimit+2, 1+i-fadeOffset)));
+            computedStrings.add(Triple.of(change, parts, Math.min(Config.fadeLimit + 2, 1 + i - fadeOffset)));
         }
         return rectWidth;
     }
 
     private String[] getChangeStrings(ChangeInfo change)
     {
-        String name = change.item.stack.getDisplayName();
-        String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
         String mode = change.mode == ChangeMode.Obtained ? "+" : "-";
-        String s1 = String.format("%s%d ", mode, change.count);
-        String s2 = String.format("%s%s", italics, name);
-        return new String[]{s1, s2};
+        String s1 = String.format("%s%d", mode, change.count);
+        if (Config.drawName)
+        {
+            String name = change.item.stack.getDisplayName();
+            String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
+            String s2 = String.format("%s%s", italics, name);
+            return new String[]{s1, " ", s2};
+        }
+        else
+        {
+            return new String[]{s1};
+        }
     }
 
     @SubscribeEvent
@@ -286,7 +301,9 @@ public class ScrollingOverlay extends GuiScreen
         {
             changeEntries.forEach(e -> e.ttl--);
             while (changeEntries.size() > hard_limit)
-            { changeEntries.remove(0); }
+            {
+                changeEntries.remove(0);
+            }
             changeEntries.removeIf((e) -> e.ttl <= 0 || e.count == 0);
         }
 
@@ -308,8 +325,7 @@ public class ScrollingOverlay extends GuiScreen
         {
             ItemStack stack = player.inventory.getStackInSlot(i);
             ItemStack old = previous[i];
-            if (!areLooselyTheSame(stack, old)
-                    || (stack.getCount() != old.getCount()))
+            if (isChangeMeaningful(old, stack))
             {
                 changes.add(Pair.of(old, stack));
             }
@@ -317,8 +333,7 @@ public class ScrollingOverlay extends GuiScreen
         }
 
         ItemStack stackInCursor = player.inventory.getItemStack();
-        if (!areLooselyTheSame(stackInCursor, previousInCursor)
-                || (stackInCursor.getCount() != previousInCursor.getCount()))
+        if (isChangeMeaningful(stackInCursor, previousInCursor))
             changes.add(Pair.of(previousInCursor, stackInCursor));
         previousInCursor = stackInCursor.copy();
 
@@ -336,19 +351,22 @@ public class ScrollingOverlay extends GuiScreen
 
             if (areSameishItem(left, right))
             {
-                int difference = right.getCount() - left.getCount();
-                if (difference > 0)
-                    obtainedItem(changeList, left, difference);
-                else if (difference < 0)
-                    lostItem(changeList, left, -difference);
+                if (!isBlacklisted(left))
+                {
+                    int difference = right.getCount() - left.getCount();
+                    if (difference > 0)
+                        obtainedItem(changeList, left, difference);
+                    else if (difference < 0)
+                        lostItem(changeList, left, -difference);
+                }
             }
             else
             {
-                if (!leftEmpty)
+                if (!leftEmpty && !isBlacklisted(left))
                 {
                     lostItem(changeList, left, left.getCount());
                 }
-                if (!rightEmpty)
+                if (!rightEmpty && !isBlacklisted(right))
                 {
                     obtainedItem(changeList, right, right.getCount());
                 }
@@ -369,6 +387,28 @@ public class ScrollingOverlay extends GuiScreen
                 }
             }
         }
+    }
+
+    private boolean isBlacklisted(ItemStack left)
+    {
+        return Config.ignoreItems.contains(left.getItem().getRegistryName().toString());
+    }
+
+    private boolean isChangeMeaningful(ItemStack a, ItemStack b)
+    {
+        if (a.getCount() != b.getCount())
+            return true;
+
+        if (a == b || isStackEmpty(a) && isStackEmpty(b))
+            return false;
+
+        if (a.getItem() == b.getItem() && Config.ignoreSubitemChanges.contains(a.getItem().getRegistryName().toString()))
+        {
+            // If we are ignoring subitem changes, consider them the same.
+            return false;
+        }
+
+        return !ItemStack.areItemsEqualIgnoreDurability(a, b);
     }
 
     private static boolean areLooselyTheSame(ItemStack a, ItemStack b)

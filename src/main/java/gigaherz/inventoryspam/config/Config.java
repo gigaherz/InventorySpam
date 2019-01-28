@@ -1,5 +1,6 @@
 package gigaherz.inventoryspam.config;
 
+import com.google.common.collect.Sets;
 import gigaherz.inventoryspam.InventorySpam;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
@@ -11,15 +12,18 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Set;
 
 @Mod.EventBusSubscriber
 public class Config
 {
     private static Configuration config;
     private static ConfigCategory general;
+    private static ConfigCategory blacklists;
     private static Property showItemAdditionsProperty;
     private static Property showItemRemovalsProperty;
     private static Property drawIconProperty;
+    private static Property drawNameProperty;
     private static Property drawOffsetVerticalProperty;
     private static Property drawOffsetHorizontalProperty;
     private static Property drawPositionProperty;
@@ -28,9 +32,13 @@ public class Config
     private static Property softLimitProperty;
     private static Property fadeLimitProperty;
 
+    private static Property ignoreItemsProperty;
+    private static Property ignoreSubitemChangesProperty;
+
     public static boolean showItemAdditions;
     public static boolean showItemRemovals;
     public static boolean drawIcon;
+    public static boolean drawName;
     public static int drawOffsetHorizontal;
     public static int drawOffsetVertical;
     public static DrawPosition drawPosition;
@@ -38,6 +46,9 @@ public class Config
     public static double iconScale;
     public static int softLimit;
     public static int fadeLimit;
+
+    public static Set<String> ignoreItems;
+    public static Set<String> ignoreSubitemChanges;
 
     public enum DrawPosition
     {
@@ -57,6 +68,11 @@ public class Config
         return general;
     }
 
+    public static ConfigCategory getBlacklistsCategory()
+    {
+        return blacklists;
+    }
+
     public static void init(File configurationFile)
     {
         config = new Configuration(configurationFile);
@@ -65,10 +81,14 @@ public class Config
         general = config.getCategory("General");
         general.setComment("General settings");
 
+        blacklists = config.getCategory("Blacklists");
+        blacklists.setComment("Item blacklists");
+
         showItemAdditionsProperty = config.get("General", "ShowItemAdditions", true);
         showItemRemovalsProperty = config.get("General", "ShowItemRemovals", true);
 
         drawIconProperty = config.get("General", "DrawIcon", true);
+        drawNameProperty = config.get("General", "DrawName", true);
 
         drawOffsetHorizontalProperty = config.get("General", "DrawOffsetHorizontal", 0);
         drawOffsetHorizontalProperty.setMinValue(0);
@@ -115,12 +135,19 @@ public class Config
         fadeLimitProperty.setMinValue(0);
         fadeLimitProperty.setComment("The number of items that will be faded out after the soft limit is reached");
 
+        ignoreItemsProperty = config.get("Blacklists", "IgnoreItem", new String[0]);
+        ignoreItemsProperty.setComment("List of item registry names to ignore when displaying changes");
+
+        ignoreSubitemChangesProperty = config.get("Blacklists", "IgnoreSubitemChanges", new String[0]);
+        ignoreSubitemChangesProperty.setComment("List of item registry names for which to ignore subitem changes");
+
         reload();
 
         if (config.hasChanged()
                 || !showItemAdditionsProperty.wasRead()
                 || !showItemRemovalsProperty.wasRead()
                 || !drawIconProperty.wasRead()
+                || !drawNameProperty.wasRead()
                 || !drawOffsetHorizontalProperty.wasRead()
                 || !drawOffsetHorizontalProperty.wasRead()
                 || !drawPositionProperty.wasRead()
@@ -137,6 +164,7 @@ public class Config
         showItemRemovals = showItemRemovalsProperty.getBoolean();
 
         drawIcon = drawIconProperty.getBoolean();
+        drawName = drawNameProperty.getBoolean();
 
         drawOffsetHorizontal = drawOffsetHorizontalProperty.getInt();
         drawOffsetVertical = drawOffsetVerticalProperty.getInt();
@@ -156,6 +184,9 @@ public class Config
             drawPositionProperty.setToDefault();
             drawPosition = DrawPosition.valueOf(drawPositionProperty.getString());
         }
+
+        ignoreItems = Sets.newHashSet(ignoreItemsProperty.getStringList());
+        ignoreSubitemChanges = Sets.newHashSet(ignoreSubitemChangesProperty.getStringList());
     }
 
     @SubscribeEvent

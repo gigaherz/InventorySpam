@@ -13,15 +13,15 @@ buildscript {
 
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "1.0.3"
+version = "1.0.5"
 group = "gigaherz.inventoryspam" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "InventorySpam-1.12.0"
+archivesBaseName = "InventorySpam-1.12.2"
 
 minecraft {
-    version = "1.12.2-14.23.4.2707"
+    version = "1.12.2-14.23.5.2808"
     runDir = "run"
 
-    mappings = "snapshot_20180601"
+    mappings = "stable_39"
 
     replace "@VERSION@", project.version
     replaceIn "InventorySpam.java"
