@@ -4,12 +4,12 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.RecipeItemHelper;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -20,7 +20,21 @@ public class ContainerWrapper extends ContainerPlayer
     private final ContainerPlayer original;
     private final Runnable callback;
 
-    private static final Field f_listeners = ObfuscationReflectionHelper.findField(Container.class, FMLLaunchHandler.isDeobfuscatedEnvironment() ? "listeners" : "field_75149_d");
+    private static final Field f_listeners = findField(Container.class, ObfuscationReflectionHelper.remapName("field_75149_d"));
+
+    private static Field findField(Class<?> clazz, String name)
+    {
+        try
+        {
+            Field f = clazz.getDeclaredField(name);
+            f.setAccessible(true);
+            return f;
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public ContainerWrapper(ContainerPlayer original, EntityPlayer player, Runnable callback)
@@ -53,7 +67,7 @@ public class ContainerWrapper extends ContainerPlayer
     }
 
     @Override
-    protected Slot addSlotToContainer(Slot slotIn)
+    protected Slot addSlot(Slot slotIn)
     {
         // Ignore -- the original container keeps the list of slots
         return slotIn;
@@ -95,8 +109,8 @@ public class ContainerWrapper extends ContainerPlayer
         return original.getInventory();
     }
 
+    @OnlyIn(Dist.CLIENT)
     @Override
-    @SideOnly(Side.CLIENT)
     public void removeListener(IContainerListener listener)
     {
         original.removeListener(listener);
@@ -146,15 +160,15 @@ public class ContainerWrapper extends ContainerPlayer
         callback.run();
     }
 
+    @OnlyIn(Dist.CLIENT)
     @Override
-    @SideOnly(Side.CLIENT)
     public void updateProgressBar(int id, int data)
     {
         original.updateProgressBar(id, data);
     }
 
+    @OnlyIn(Dist.CLIENT)
     @Override
-    @SideOnly(Side.CLIENT)
     public short getNextTransactionID(InventoryPlayer invPlayer)
     {
         return original.getNextTransactionID(invPlayer);
@@ -178,5 +192,45 @@ public class ContainerWrapper extends ContainerPlayer
         return original.canDragIntoSlot(slotIn);
     }
 
+    @Override
+    public void func_201771_a(RecipeItemHelper p_201771_1_)
+    {
+        original.func_201771_a(p_201771_1_);
+    }
 
+    @Override
+    public void clear()
+    {
+        original.clear();
+    }
+
+    @Override
+    public boolean matches(IRecipe p_201769_1_)
+    {
+        return original.matches(p_201769_1_);
+    }
+
+    @Override
+    public int getOutputSlot()
+    {
+        return original.getOutputSlot();
+    }
+
+    @Override
+    public int getWidth()
+    {
+        return original.getWidth();
+    }
+
+    @Override
+    public int getHeight()
+    {
+        return original.getHeight();
+    }
+
+    @Override
+    public int getSize()
+    {
+        return original.getSize();
+    }
 }

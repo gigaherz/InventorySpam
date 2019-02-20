@@ -1,40 +1,51 @@
 package gigaherz.inventoryspam;
 
 import gigaherz.inventoryspam.config.Config;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import org.apache.logging.log4j.Logger;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+
+import java.util.logging.Logger;
 
 @Mod.EventBusSubscriber
-@Mod(modid = InventorySpam.MODID, version = InventorySpam.VERSION,
-        clientSideOnly = true,
-        acceptableRemoteVersions = "*",
-        canBeDeactivated = true,
-        acceptedMinecraftVersions = "[1.12.0,1.13.0)",
-        guiFactory = "gigaherz.inventoryspam.config.ConfigGuiFactory")
+@Mod(InventorySpam.MODID)
 public class InventorySpam
 {
     public static final String MODID = "inventoryspam";
     public static final String VERSION = "@VERSION@";
 
     // The instance of your mod that Forge uses.
-    @Mod.Instance(InventorySpam.MODID)
     public static InventorySpam instance;
 
-    public static Logger logger;
+    public static final java.util.logging.Logger LOGGER = Logger.getLogger(MODID);
 
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event)
+    public InventorySpam()
     {
-        logger = event.getModLog();
+        instance = this;
 
-        Config.init(event.getSuggestedConfigurationFile());
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientInit);
+
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.CLIENT_SPEC);
+
+        //ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> ConfigGuiFactory.createConfigGui(mc, screen));
     }
 
-    @EventHandler
-    public void init(FMLInitializationEvent event)
+    public void serverConfig(ModConfig.ModConfigEvent event)
+    {
+        if (event.getConfig().getSpec() == Config.CLIENT_SPEC)
+            Config.reload();
+    }
+
+    private void preInit(FMLCommonSetupEvent event)
+    {
+        //Config.init(event.getSuggestedConfigurationFile());
+    }
+
+    private void clientInit(FMLClientSetupEvent event)
     {
         ScrollingOverlay.init();
     }

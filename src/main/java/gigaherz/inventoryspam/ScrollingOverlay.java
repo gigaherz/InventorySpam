@@ -5,17 +5,17 @@ import gigaherz.inventoryspam.config.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -35,8 +35,7 @@ public class ScrollingOverlay extends GuiScreen
 
     private int hard_limit;
 
-    private RenderItem renderItem;
-    private int dim;
+    private DimensionType dim;
     private int dimLoadTicks;
     private ItemStack[] previous;
     private EntityPlayer playerEntity;
@@ -44,9 +43,10 @@ public class ScrollingOverlay extends GuiScreen
     private ItemStack previousInCursor = ItemStack.EMPTY;
     private final List<ChangeInfo> changeEntries = Lists.newArrayList();
 
+    private final Minecraft mc = Minecraft.getInstance();
+
     private ScrollingOverlay()
     {
-        renderItem = Minecraft.getMinecraft().getRenderItem();
     }
 
     @SubscribeEvent
@@ -58,21 +58,22 @@ public class ScrollingOverlay extends GuiScreen
         if (event.getType() != RenderGameOverlayEvent.ElementType.CHAT)
             return;
 
-        ScaledResolution resolution = event.getResolution();
-        int width = resolution.getScaledWidth();
-        int height = resolution.getScaledHeight();
+
+        int width = mc.mainWindow.getScaledWidth();
+        int height = mc.mainWindow.getScaledHeight();
 
         width = (int) (width / Config.drawScale);
         height = (int) (height / Config.drawScale);
 
-        FontRenderer font = Minecraft.getMinecraft().fontRenderer;
+        FontRenderer fontRenderer = mc.fontRenderer;
+        ItemRenderer itemRenderer = mc.getItemRenderer();
 
         int iconSize = (int) (16 * Config.iconScale);
         int rightMargin = Config.drawIcon ? (2 + iconSize) : 0;
-        int topMargin1 = 2 + (Config.drawIcon ? Math.max(0, (iconSize - font.FONT_HEIGHT) / 2) : 0);
-        int topMargin2 = 1 + Math.max(0, -(iconSize - font.FONT_HEIGHT) / 2);
+        int topMargin1 = 2 + (Config.drawIcon ? Math.max(0, (iconSize - fontRenderer.FONT_HEIGHT) / 2) : 0);
+        int topMargin2 = 1 + Math.max(0, -(iconSize - fontRenderer.FONT_HEIGHT) / 2);
 
-        int lineHeight = font.FONT_HEIGHT;
+        int lineHeight = fontRenderer.FONT_HEIGHT;
         if (Config.drawIcon)
             lineHeight = Math.max(2 + iconSize, lineHeight);
 
@@ -88,7 +89,7 @@ public class ScrollingOverlay extends GuiScreen
             if (changeEntries.size() == 0)
                 return;
 
-            rectWidth = computeStrings(computedStrings, font);
+            rectWidth = computeStrings(computedStrings, fontRenderer);
 
             number = computedStrings.size();
             if (number == 0)
@@ -96,7 +97,7 @@ public class ScrollingOverlay extends GuiScreen
         }
 
         GlStateManager.pushMatrix();
-        GlStateManager.scale(Config.drawScale, Config.drawScale, 1);
+        GlStateManager.scaled(Config.drawScale, Config.drawScale, 1);
 
         rectWidth += rightMargin;
 
@@ -168,7 +169,7 @@ public class ScrollingOverlay extends GuiScreen
             for(int n = 0;n<strings.length;n++)
             {
                 String str = strings[n];
-                int wn = widths[n] = font.getStringWidth(str);
+                int wn = widths[n] = fontRenderer.getStringWidth(str);
                 w += wn;
             }
 
@@ -195,18 +196,18 @@ public class ScrollingOverlay extends GuiScreen
             int wAcc = 0;
             for(int n = 0;n<strings.length;n++)
             {
-                font.drawStringWithShadow(strings[n], x + leftMargin + wAcc, y + topMargin1, color);
+                fontRenderer.drawStringWithShadow(strings[n], x + leftMargin + wAcc, y + topMargin1, color);
                 wAcc += widths[n];
             }
 
             if (Config.drawIcon)
             {
                 GlStateManager.pushMatrix();
-                GlStateManager.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
-                GlStateManager.scale(Config.iconScale, Config.iconScale, 1);
+                GlStateManager.translatef(x + 2 + w + leftMargin, y + topMargin2, 0);
+                GlStateManager.scaled(Config.iconScale, Config.iconScale, 1);
                 RenderHelper.enableGUIStandardItemLighting();
-                renderItem.renderItemAndEffectIntoGUI(change.item.stack, 0, 0);
-                renderItem.renderItemOverlayIntoGUI(font, change.item.stack, 0, 0, null);
+                itemRenderer.renderItemAndEffectIntoGUI(change.item.stack, 0, 0);
+                itemRenderer.renderItemOverlayIntoGUI(fontRenderer, change.item.stack, 0, 0, null);
                 RenderHelper.disableStandardItemLighting();
                 GlStateManager.popMatrix();
             }
@@ -244,7 +245,7 @@ public class ScrollingOverlay extends GuiScreen
         String s1 = String.format("%s%d", mode, change.count);
         if (Config.drawName)
         {
-            String name = change.item.stack.getDisplayName();
+            String name = change.item.stack.getDisplayName().getFormattedText();
             String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
             String s2 = String.format("%s%s", italics, name);
             return new String[]{s1, " ", s2};
@@ -264,7 +265,7 @@ public class ScrollingOverlay extends GuiScreen
         if (!Config.showItemAdditions && !Config.showItemRemovals)
             return;
 
-        EntityPlayer player = Minecraft.getMinecraft().player;
+        EntityPlayer player = mc.player;
 
         if (player == null)
             return;
@@ -525,7 +526,7 @@ public class ScrollingOverlay extends GuiScreen
         @Override
         public int hashCode()
         {
-            return stack.getItem().hashCode() * 31 ^ stack.getMetadata();
+            return stack.getItem().hashCode();
         }
     }
 }

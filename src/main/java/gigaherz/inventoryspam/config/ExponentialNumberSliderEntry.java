@@ -2,6 +2,7 @@ package gigaherz.inventoryspam.config;
 
 import net.minecraftforge.fml.client.config.*;
 
+/*
 public class ExponentialNumberSliderEntry extends GuiConfigEntries.ButtonEntry
 {
     protected final double beforeValue;
@@ -118,3 +119,4 @@ public class ExponentialNumberSliderEntry extends GuiConfigEntries.ButtonEntry
         }
     }
 }
+*/

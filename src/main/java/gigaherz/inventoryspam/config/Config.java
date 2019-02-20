@@ -1,54 +1,122 @@
 package gigaherz.inventoryspam.config;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import gigaherz.inventoryspam.InventorySpam;
-import net.minecraftforge.common.config.ConfigCategory;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
-import net.minecraftforge.fml.client.config.GuiConfigEntries;
+import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber
 public class Config
 {
-    private static Configuration config;
-    private static ConfigCategory general;
-    private static ConfigCategory blacklists;
-    private static Property showItemAdditionsProperty;
-    private static Property showItemRemovalsProperty;
-    private static Property drawIconProperty;
-    private static Property drawNameProperty;
-    private static Property drawOffsetVerticalProperty;
-    private static Property drawOffsetHorizontalProperty;
-    private static Property drawPositionProperty;
-    private static Property drawScaleProperty;
-    private static Property iconScaleProperty;
-    private static Property softLimitProperty;
-    private static Property fadeLimitProperty;
+    public static final ClientConfig CLIENT;
+    public static final ForgeConfigSpec CLIENT_SPEC;
+    static {
+        final Pair<ClientConfig, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(ClientConfig::new);
+        CLIENT_SPEC = specPair.getRight();
+        CLIENT = specPair.getLeft();
+    }
 
-    private static Property ignoreItemsProperty;
-    private static Property ignoreSubitemChangesProperty;
+    static class ClientConfig
+    {
+        private static final Set<String> DRAW_POSITIONS = Arrays.stream(DrawPosition.values()).map(Enum::toString).collect(Collectors.toSet());
 
-    public static boolean showItemAdditions;
-    public static boolean showItemRemovals;
-    public static boolean drawIcon;
-    public static boolean drawName;
+        public ForgeConfigSpec.BooleanValue showItemAdditions;
+        public ForgeConfigSpec.BooleanValue showItemRemovals;
+        public ForgeConfigSpec.BooleanValue drawIcon;
+        public ForgeConfigSpec.BooleanValue drawName;
+        public ForgeConfigSpec.ConfigValue<String> drawPosition;
+        public ForgeConfigSpec.IntValue drawOffsetHorizontal;
+        public ForgeConfigSpec.IntValue drawOffsetVertical;
+        public ForgeConfigSpec.DoubleValue drawScale;
+        public ForgeConfigSpec.DoubleValue iconScale;
+        public ForgeConfigSpec.IntValue softLimit;
+        public ForgeConfigSpec.IntValue fadeLimit;
+        public ForgeConfigSpec.ConfigValue<List<? extends String>> ignoreItems;
+        public ForgeConfigSpec.ConfigValue<List<? extends String>> ignoreSubitemChanges;
+
+        public ClientConfig(ForgeConfigSpec.Builder builder)
+        {
+            builder.push("general");
+            ignoreItems = builder
+                    .comment("TileEntities to allow regardless of the blacklist")
+                    .translation("text.inventoryspam.config.ignore_items")
+                    .defineList("ignore_items", Lists.newArrayList(), o -> o instanceof String);
+            ignoreSubitemChanges = builder
+                    .comment("TileEntities to allow regardless of the blacklist")
+                    .translation("text.inventoryspam.config.ignore_items")
+                    .defineList("ignore_subitem_changes", Lists.newArrayList(), o -> o instanceof String);
+            showItemAdditions = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.show_item_additions")
+                    .define("show_item_additions", true);
+            showItemRemovals = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.show_item_removals")
+                    .define("show_item_removals", true);
+            drawIcon = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.draw_icon")
+                    .define("draw_icon", true);
+            drawName = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.draw_name")
+                    .define("draw_name", true);
+            drawPosition = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.draw_position")
+                    .define("draw_position", DrawPosition.BottomRight::toString, (e) -> e instanceof String && DRAW_POSITIONS.contains(e));
+            drawOffsetHorizontal = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.draw_offset_horizontal")
+                    .defineInRange("draw_offset_horizontal", 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            drawOffsetVertical = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.draw_offset_vertical")
+                    .defineInRange("draw_offset_vertical", 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            drawScale = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.draw_scale")
+                    .defineInRange("draw_scale", 1.0, 0.1, 2.0);
+            iconScale = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.icon_scale")
+                    .defineInRange("icon_scale", 0.6, 0.1, 2.0);
+            softLimit = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.soft_limit")
+                    .defineInRange("soft_limit", 0, 1, 30);
+            fadeLimit = builder
+                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .translation("text.inventoryspam.config.fade_limit")
+                    .defineInRange("fade_limit", 0, 0, 15);
+            builder.pop();
+        }
+    }
+
+    public static boolean showItemAdditions = true;
+    public static boolean showItemRemovals = true;
+    public static boolean drawIcon = true;
+    public static boolean drawName = true;
     public static int drawOffsetHorizontal;
     public static int drawOffsetVertical;
-    public static DrawPosition drawPosition;
-    public static double drawScale;
-    public static double iconScale;
-    public static int softLimit;
-    public static int fadeLimit;
+    public static DrawPosition drawPosition = DrawPosition.BottomRight;
+    public static double drawScale = 1.0;
+    public static double iconScale = 0.6;
+    public static int softLimit = 10;
+    public static int fadeLimit = 5;
 
-    public static Set<String> ignoreItems;
-    public static Set<String> ignoreSubitemChanges;
+    public static Set<String> ignoreItems = Sets.newHashSet();
+    public static Set<String> ignoreSubitemChanges = Sets.newHashSet();
 
     public enum DrawPosition
     {
@@ -63,130 +131,27 @@ public class Config
         Center
     }
 
-    public static ConfigCategory getGeneralCategory()
+    public static void reload()
     {
-        return general;
-    }
+        showItemAdditions = CLIENT.showItemAdditions.get();
+        showItemRemovals = CLIENT.showItemRemovals.get();
 
-    public static ConfigCategory getBlacklistsCategory()
-    {
-        return blacklists;
-    }
+        drawIcon = CLIENT.drawIcon.get();
+        drawName = CLIENT.drawName.get();
 
-    public static void init(File configurationFile)
-    {
-        config = new Configuration(configurationFile);
-        config.load();
+        drawOffsetHorizontal = CLIENT.drawOffsetHorizontal.get();
+        drawOffsetVertical = CLIENT.drawOffsetVertical.get();
 
-        general = config.getCategory("General");
-        general.setComment("General settings");
+        drawScale = Math.pow(10, CLIENT.drawScale.get());
+        iconScale = Math.pow(10, CLIENT.iconScale.get());
 
-        blacklists = config.getCategory("Blacklists");
-        blacklists.setComment("Item blacklists");
+        softLimit = CLIENT.softLimit.get();
+        fadeLimit = CLIENT.fadeLimit.get();
 
-        showItemAdditionsProperty = config.get("General", "ShowItemAdditions", true);
-        showItemRemovalsProperty = config.get("General", "ShowItemRemovals", true);
+        drawPosition = DrawPosition.valueOf(CLIENT.drawPosition.get());
 
-        drawIconProperty = config.get("General", "DrawIcon", true);
-        drawNameProperty = config.get("General", "DrawName", true);
-
-        drawOffsetHorizontalProperty = config.get("General", "DrawOffsetHorizontal", 0);
-        drawOffsetHorizontalProperty.setMinValue(0);
-        drawOffsetHorizontalProperty.setMaxValue(256);
-        drawOffsetHorizontalProperty.setConfigEntryClass(GuiConfigEntries.NumberSliderEntry.class);
-
-        drawOffsetVerticalProperty = config.get("General", "DrawOffsetVertical", 18);
-        drawOffsetVerticalProperty.setMinValue(0);
-        drawOffsetVerticalProperty.setMaxValue(256);
-        drawOffsetVerticalProperty.setConfigEntryClass(GuiConfigEntries.NumberSliderEntry.class);
-
-        drawPositionProperty = config.get("General", "SnapPosition", DrawPosition.BottomRight.toString());
-        drawPositionProperty.setValidValues(Arrays.stream(DrawPosition.values())
-                .map(DrawPosition::toString)
-                .toArray(String[]::new));
-        drawPositionProperty.setComment("Edge/corner of the screen to use as the base location:\n" +
-                "  BottomRight\n" +
-                "  Bottom\n" +
-                "  BottomLeft\n" +
-                "  Left\n" +
-                "  TopLeft\n" +
-                "  Top\n" +
-                "  TopRight\n" +
-                "  Right\n" +
-                "  Center");
-
-        drawScaleProperty = config.get("General", "DrawScaleProperty", 0.0);
-        drawScaleProperty.setMinValue(-2);
-        drawScaleProperty.setMaxValue(2);
-        drawScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000%(100x) -- Use the ingame config gui");
-        drawScaleProperty.setConfigEntryClass(ExponentialNumberSliderEntry.class);
-
-        iconScaleProperty = config.get("General", "IconScaleProperty", -0.2);
-        iconScaleProperty.setMinValue(-2);
-        iconScaleProperty.setMaxValue(2);
-        iconScaleProperty.setComment("Exponential: -2 is 1%, 2 is 10000%(100x) -- Use the ingame config gui");
-        iconScaleProperty.setConfigEntryClass(ExponentialNumberSliderEntry.class);
-
-        softLimitProperty = config.get("General", "SoftLimit", 6);
-        softLimitProperty.setMinValue(1);
-        softLimitProperty.setComment("The maximum number of items in the queue before they start fading out artificially");
-
-        fadeLimitProperty = config.get("General", "FadeLimit", 3);
-        fadeLimitProperty.setMinValue(0);
-        fadeLimitProperty.setComment("The number of items that will be faded out after the soft limit is reached");
-
-        ignoreItemsProperty = config.get("Blacklists", "IgnoreItem", new String[0]);
-        ignoreItemsProperty.setComment("List of item registry names to ignore when displaying changes");
-
-        ignoreSubitemChangesProperty = config.get("Blacklists", "IgnoreSubitemChanges", new String[0]);
-        ignoreSubitemChangesProperty.setComment("List of item registry names for which to ignore subitem changes");
-
-        reload();
-
-        if (config.hasChanged()
-                || !showItemAdditionsProperty.wasRead()
-                || !showItemRemovalsProperty.wasRead()
-                || !drawIconProperty.wasRead()
-                || !drawNameProperty.wasRead()
-                || !drawOffsetHorizontalProperty.wasRead()
-                || !drawOffsetHorizontalProperty.wasRead()
-                || !drawPositionProperty.wasRead()
-                || !iconScaleProperty.wasRead()
-                || !softLimitProperty.wasRead()
-                || !fadeLimitProperty.wasRead()
-                )
-            config.save();
-    }
-
-    private static void reload()
-    {
-        showItemAdditions = showItemAdditionsProperty.getBoolean();
-        showItemRemovals = showItemRemovalsProperty.getBoolean();
-
-        drawIcon = drawIconProperty.getBoolean();
-        drawName = drawNameProperty.getBoolean();
-
-        drawOffsetHorizontal = drawOffsetHorizontalProperty.getInt();
-        drawOffsetVertical = drawOffsetVerticalProperty.getInt();
-
-        drawScale = Math.pow(10, drawScaleProperty.getDouble());
-        iconScale = Math.pow(10, iconScaleProperty.getDouble());
-
-        softLimit = softLimitProperty.getInt();
-        fadeLimit = fadeLimitProperty.getInt();
-
-        try
-        {
-            drawPosition = DrawPosition.valueOf(drawPositionProperty.getString());
-        }
-        catch (IllegalArgumentException ex)
-        {
-            drawPositionProperty.setToDefault();
-            drawPosition = DrawPosition.valueOf(drawPositionProperty.getString());
-        }
-
-        ignoreItems = Sets.newHashSet(ignoreItemsProperty.getStringList());
-        ignoreSubitemChanges = Sets.newHashSet(ignoreSubitemChangesProperty.getStringList());
+        ignoreItems = Sets.newHashSet(CLIENT.ignoreItems.get());
+        ignoreSubitemChanges = Sets.newHashSet(CLIENT.ignoreSubitemChanges.get());
     }
 
     @SubscribeEvent
@@ -194,8 +159,6 @@ public class Config
     {
         if (InventorySpam.MODID.equals(event.getModID()))
         {
-            if (config.hasChanged())
-                config.save();
             reload();
         }
     }

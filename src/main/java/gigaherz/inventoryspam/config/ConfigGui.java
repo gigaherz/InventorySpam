@@ -1,5 +1,5 @@
 package gigaherz.inventoryspam.config;
-
+/*
 import com.google.common.collect.Lists;
 import gigaherz.inventoryspam.InventorySpam;
 import net.minecraft.client.gui.GuiScreen;
@@ -29,3 +29,4 @@ public class ConfigGui extends GuiConfig
         return list;
     }
 }
+*/
