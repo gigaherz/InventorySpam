@@ -157,16 +157,15 @@ public class ScrollingOverlay extends GuiScreen
 
         drawRect(x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
 
-        for (int i = 0; i < computedStrings.size(); i++)
+        for (Triple<ChangeInfo, String[], Integer> e : computedStrings)
         {
-            Triple<ChangeInfo, String[], Integer> e = computedStrings.get(i);
             ChangeInfo change = e.getLeft();
             String[] strings = e.getMiddle();
             int fade = e.getRight();
 
             int w = 0;
             int[] widths = new int[strings.length];
-            for(int n = 0;n<strings.length;n++)
+            for (int n = 0; n < strings.length; n++)
             {
                 String str = strings[n];
                 int wn = widths[n] = fontRenderer.getStringWidth(str);
@@ -194,7 +193,7 @@ public class ScrollingOverlay extends GuiScreen
 
             GlStateManager.enableBlend();
             int wAcc = 0;
-            for(int n = 0;n<strings.length;n++)
+            for (int n = 0; n < strings.length; n++)
             {
                 fontRenderer.drawStringWithShadow(strings[n], x + leftMargin + wAcc, y + topMargin1, color);
                 wAcc += widths[n];

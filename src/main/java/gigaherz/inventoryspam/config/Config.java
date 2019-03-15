@@ -2,14 +2,10 @@ package gigaherz.inventoryspam.config;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import gigaherz.inventoryspam.InventorySpam;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -26,25 +22,25 @@ public class Config
         CLIENT = specPair.getLeft();
     }
 
-    static class ClientConfig
+    private static class ClientConfig
     {
         private static final Set<String> DRAW_POSITIONS = Arrays.stream(DrawPosition.values()).map(Enum::toString).collect(Collectors.toSet());
 
-        public ForgeConfigSpec.BooleanValue showItemAdditions;
-        public ForgeConfigSpec.BooleanValue showItemRemovals;
-        public ForgeConfigSpec.BooleanValue drawIcon;
-        public ForgeConfigSpec.BooleanValue drawName;
-        public ForgeConfigSpec.ConfigValue<String> drawPosition;
-        public ForgeConfigSpec.IntValue drawOffsetHorizontal;
-        public ForgeConfigSpec.IntValue drawOffsetVertical;
-        public ForgeConfigSpec.DoubleValue drawScale;
-        public ForgeConfigSpec.DoubleValue iconScale;
-        public ForgeConfigSpec.IntValue softLimit;
-        public ForgeConfigSpec.IntValue fadeLimit;
-        public ForgeConfigSpec.ConfigValue<List<? extends String>> ignoreItems;
-        public ForgeConfigSpec.ConfigValue<List<? extends String>> ignoreSubitemChanges;
+        ForgeConfigSpec.BooleanValue showItemAdditions;
+        ForgeConfigSpec.BooleanValue showItemRemovals;
+        ForgeConfigSpec.BooleanValue drawIcon;
+        ForgeConfigSpec.BooleanValue drawName;
+        ForgeConfigSpec.ConfigValue<String> drawPosition;
+        ForgeConfigSpec.IntValue drawOffsetHorizontal;
+        ForgeConfigSpec.IntValue drawOffsetVertical;
+        ForgeConfigSpec.DoubleValue drawScale;
+        ForgeConfigSpec.DoubleValue iconScale;
+        ForgeConfigSpec.IntValue softLimit;
+        ForgeConfigSpec.IntValue fadeLimit;
+        ForgeConfigSpec.ConfigValue<List<? extends String>> ignoreItems;
+        ForgeConfigSpec.ConfigValue<List<? extends String>> ignoreSubitemChanges;
 
-        public ClientConfig(ForgeConfigSpec.Builder builder)
+        ClientConfig(ForgeConfigSpec.Builder builder)
         {
             builder.push("general");
             ignoreItems = builder
@@ -131,7 +127,7 @@ public class Config
         Center
     }
 
-    public static void reload()
+    public static void bake()
     {
         showItemAdditions = CLIENT.showItemAdditions.get();
         showItemRemovals = CLIENT.showItemRemovals.get();
@@ -152,14 +148,5 @@ public class Config
 
         ignoreItems = Sets.newHashSet(CLIENT.ignoreItems.get());
         ignoreSubitemChanges = Sets.newHashSet(CLIENT.ignoreSubitemChanges.get());
-    }
-
-    @SubscribeEvent
-    public static void onConfigChange(ConfigChangedEvent.OnConfigChangedEvent event)
-    {
-        if (InventorySpam.MODID.equals(event.getModID()))
-        {
-            reload();
-        }
     }
 }
