@@ -44,57 +44,57 @@ public class Config
         {
             builder.push("general");
             ignoreItems = builder
-                    .comment("TileEntities to allow regardless of the blacklist")
+                    .comment("Items to ignore when finding changes")
                     .translation("text.inventoryspam.config.ignore_items")
                     .defineList("ignore_items", Lists.newArrayList(), o -> o instanceof String);
             ignoreSubitemChanges = builder
-                    .comment("TileEntities to allow regardless of the blacklist")
-                    .translation("text.inventoryspam.config.ignore_items")
+                    .comment("Items for which to ignore NBT changes")
+                    .translation("text.inventoryspam.config.ignore_subitems")
                     .defineList("ignore_subitem_changes", Lists.newArrayList(), o -> o instanceof String);
             showItemAdditions = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Show gained items in the overlay")
                     .translation("text.inventoryspam.config.show_item_additions")
                     .define("show_item_additions", true);
             showItemRemovals = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Show lost items in the overlay")
                     .translation("text.inventoryspam.config.show_item_removals")
                     .define("show_item_removals", true);
             drawIcon = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Draw item icon in the overlay")
                     .translation("text.inventoryspam.config.draw_icon")
                     .define("draw_icon", true);
             drawName = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Draw item name in the overlay")
                     .translation("text.inventoryspam.config.draw_name")
                     .define("draw_name", true);
             drawPosition = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Which corner/edge of the screen to base the overlay position on")
                     .translation("text.inventoryspam.config.draw_position")
                     .define("draw_position", DrawPosition.BottomRight::toString, (e) -> e instanceof String && DRAW_POSITIONS.contains(e));
             drawOffsetHorizontal = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Horizontal offset from the chosen position to draw the overlay on")
                     .translation("text.inventoryspam.config.draw_offset_horizontal")
                     .defineInRange("draw_offset_horizontal", 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
             drawOffsetVertical = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Vertical offset from the chosen position to draw the overlay on")
                     .translation("text.inventoryspam.config.draw_offset_vertical")
                     .defineInRange("draw_offset_vertical", 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
             drawScale = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Size of the overlay relative to the GUI scale")
                     .translation("text.inventoryspam.config.draw_scale")
-                    .defineInRange("draw_scale", 1.0, 0.1, 2.0);
+                    .defineInRange("draw_scale", 1.0, 0.001, 1000.0);
             iconScale = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Size of the icons relative to the overlay size")
                     .translation("text.inventoryspam.config.icon_scale")
-                    .defineInRange("icon_scale", 0.6, 0.1, 2.0);
+                    .defineInRange("icon_scale", 0.6, 0.001, 1000.0);
             softLimit = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Number items to show in the overlay before older items start to get forcefully faded")
                     .translation("text.inventoryspam.config.soft_limit")
-                    .defineInRange("soft_limit", 0, 1, 30);
+                    .defineInRange("soft_limit", 10, 1, 30);
             fadeLimit = builder
-                    .comment("TileEntities to disallow (whitelist takes precedence)")
+                    .comment("Number of items to show progressively faded, when the soft limit is reached")
                     .translation("text.inventoryspam.config.fade_limit")
-                    .defineInRange("fade_limit", 0, 0, 15);
+                    .defineInRange("fade_limit", 5, 0, 15);
             builder.pop();
         }
     }
@@ -138,8 +138,8 @@ public class Config
         drawOffsetHorizontal = CLIENT.drawOffsetHorizontal.get();
         drawOffsetVertical = CLIENT.drawOffsetVertical.get();
 
-        drawScale = Math.pow(10, CLIENT.drawScale.get());
-        iconScale = Math.pow(10, CLIENT.iconScale.get());
+        drawScale = CLIENT.drawScale.get();
+        iconScale = CLIENT.iconScale.get();
 
         softLimit = CLIENT.softLimit.get();
         fadeLimit = CLIENT.fadeLimit.get();
