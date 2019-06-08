@@ -1,16 +1,17 @@
 package gigaherz.inventoryspam;
 
 import com.google.common.collect.Lists;
-import gigaherz.inventoryspam.config.Config;
+import com.mojang.blaze3d.platform.GlStateManager;
+import gigaherz.inventoryspam.config.ConfigData;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.ContainerPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -23,9 +24,9 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.util.Arrays;
 import java.util.List;
 
-public class ScrollingOverlay extends GuiScreen
+public class ScrollingOverlay extends Screen
 {
-    public static void init()
+    public static void register()
     {
         MinecraftForge.EVENT_BUS.register(new ScrollingOverlay());
     }
@@ -38,7 +39,7 @@ public class ScrollingOverlay extends GuiScreen
     private DimensionType dim;
     private int dimLoadTicks;
     private ItemStack[] previous;
-    private EntityPlayer playerEntity;
+    private PlayerEntity playerEntity;
 
     private ItemStack previousInCursor = ItemStack.EMPTY;
     private final List<ChangeInfo> changeEntries = Lists.newArrayList();
@@ -47,12 +48,13 @@ public class ScrollingOverlay extends GuiScreen
 
     private ScrollingOverlay()
     {
+        super(new StringTextComponent("OVERLAY"));
     }
 
     @SubscribeEvent
     public void renderOverlay(RenderGameOverlayEvent.Post event)
     {
-        if (!Config.showItemAdditions && !Config.showItemRemovals)
+        if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
 
         if (event.getType() != RenderGameOverlayEvent.ElementType.CHAT)
@@ -62,19 +64,19 @@ public class ScrollingOverlay extends GuiScreen
         int width = mc.mainWindow.getScaledWidth();
         int height = mc.mainWindow.getScaledHeight();
 
-        width = (int) (width / Config.drawScale);
-        height = (int) (height / Config.drawScale);
+        width = (int) (width / ConfigData.drawScale);
+        height = (int) (height / ConfigData.drawScale);
 
         FontRenderer fontRenderer = mc.fontRenderer;
         ItemRenderer itemRenderer = mc.getItemRenderer();
 
-        int iconSize = (int) (16 * Config.iconScale);
-        int rightMargin = Config.drawIcon ? (2 + iconSize) : 0;
-        int topMargin1 = 2 + (Config.drawIcon ? Math.max(0, (iconSize - fontRenderer.FONT_HEIGHT) / 2) : 0);
+        int iconSize = (int) (16 * ConfigData.iconScale);
+        int rightMargin = ConfigData.drawIcon ? (2 + iconSize) : 0;
+        int topMargin1 = 2 + (ConfigData.drawIcon ? Math.max(0, (iconSize - fontRenderer.FONT_HEIGHT) / 2) : 0);
         int topMargin2 = 1 + Math.max(0, -(iconSize - fontRenderer.FONT_HEIGHT) / 2);
 
         int lineHeight = fontRenderer.FONT_HEIGHT;
-        if (Config.drawIcon)
+        if (ConfigData.drawIcon)
             lineHeight = Math.max(2 + iconSize, lineHeight);
 
         hard_limit = height / lineHeight;
@@ -97,7 +99,7 @@ public class ScrollingOverlay extends GuiScreen
         }
 
         GlStateManager.pushMatrix();
-        GlStateManager.scaled(Config.drawScale, Config.drawScale, 1);
+        GlStateManager.scaled(ConfigData.drawScale, ConfigData.drawScale, 1);
 
         rectWidth += rightMargin;
 
@@ -105,57 +107,57 @@ public class ScrollingOverlay extends GuiScreen
 
         int x, y;
         int align;
-        switch (Config.drawPosition)
+        switch (ConfigData.drawPosition)
         {
             default:
             case BottomRight:
-                x = width - 2 - rectWidth - Config.drawOffsetHorizontal;
-                y = height - 2 - rectHeight - Config.drawOffsetVertical;
+                x = width - 2 - rectWidth - ConfigData.drawOffsetHorizontal;
+                y = height - 2 - rectHeight - ConfigData.drawOffsetVertical;
                 align = 1;
                 break;
             case Bottom:
-                x = (width - rectWidth) / 2 - 2 + Config.drawOffsetHorizontal;
-                y = height - 2 - rectHeight - Config.drawOffsetVertical;
+                x = (width - rectWidth) / 2 - 2 + ConfigData.drawOffsetHorizontal;
+                y = height - 2 - rectHeight - ConfigData.drawOffsetVertical;
                 align = 0;
                 break;
             case BottomLeft:
-                x = 2 + Config.drawOffsetHorizontal;
-                y = height - 2 - rectHeight - Config.drawOffsetVertical;
+                x = 2 + ConfigData.drawOffsetHorizontal;
+                y = height - 2 - rectHeight - ConfigData.drawOffsetVertical;
                 align = -1;
                 break;
             case Left:
-                x = 2 + Config.drawOffsetHorizontal;
-                y = (height - rectHeight) / 2 - 2 + Config.drawOffsetVertical;
+                x = 2 + ConfigData.drawOffsetHorizontal;
+                y = (height - rectHeight) / 2 - 2 + ConfigData.drawOffsetVertical;
                 align = -1;
                 break;
             case TopLeft:
-                x = 2 + Config.drawOffsetHorizontal;
-                y = 2 + Config.drawOffsetVertical;
+                x = 2 + ConfigData.drawOffsetHorizontal;
+                y = 2 + ConfigData.drawOffsetVertical;
                 align = -1;
                 break;
             case Top:
-                x = (width - rectWidth) / 2 - 2 + Config.drawOffsetHorizontal;
-                y = 2 + Config.drawOffsetVertical;
+                x = (width - rectWidth) / 2 - 2 + ConfigData.drawOffsetHorizontal;
+                y = 2 + ConfigData.drawOffsetVertical;
                 align = 0;
                 break;
             case TopRight:
-                x = width - 2 - rectWidth - Config.drawOffsetHorizontal;
-                y = 2 + Config.drawOffsetVertical;
+                x = width - 2 - rectWidth - ConfigData.drawOffsetHorizontal;
+                y = 2 + ConfigData.drawOffsetVertical;
                 align = 1;
                 break;
             case Right:
-                x = width - 2 - rectWidth - Config.drawOffsetHorizontal;
-                y = (height - rectHeight) / 2 - 2 + Config.drawOffsetVertical;
+                x = width - 2 - rectWidth - ConfigData.drawOffsetHorizontal;
+                y = (height - rectHeight) / 2 - 2 + ConfigData.drawOffsetVertical;
                 align = 1;
                 break;
             case Center:
-                x = (width - rectWidth) / 2 - 2 + Config.drawOffsetHorizontal;
-                y = (height - rectHeight) / 2 - 2 + Config.drawOffsetVertical;
+                x = (width - rectWidth) / 2 - 2 + ConfigData.drawOffsetHorizontal;
+                y = (height - rectHeight) / 2 - 2 + ConfigData.drawOffsetVertical;
                 align = 0;
                 break;
         }
 
-        drawRect(x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
+        fill(x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
 
         for (Triple<ChangeInfo, String[], Integer> e : computedStrings)
         {
@@ -172,7 +174,7 @@ public class ScrollingOverlay extends GuiScreen
                 w += wn;
             }
 
-            int forcedFade = Config.fadeLimit > 0 ? (fade * 255 / (Config.fadeLimit + 2)) : 255;
+            int forcedFade = ConfigData.fadeLimit > 0 ? (fade * 255 / (ConfigData.fadeLimit + 2)) : 255;
             int ttlFade = change.ttl * 255 / FADE;
             int alpha = Math.min(255, Math.min(forcedFade, ttlFade));
             int color = alpha << 24 | (change.mode == ChangeMode.Obtained ? 0x7FFF7F : 0xFF5F5F);
@@ -199,11 +201,11 @@ public class ScrollingOverlay extends GuiScreen
                 wAcc += widths[n];
             }
 
-            if (Config.drawIcon)
+            if (ConfigData.drawIcon)
             {
                 GlStateManager.pushMatrix();
                 GlStateManager.translatef(x + 2 + w + leftMargin, y + topMargin2, 0);
-                GlStateManager.scaled(Config.iconScale, Config.iconScale, 1);
+                GlStateManager.scaled(ConfigData.iconScale, ConfigData.iconScale, 1);
                 RenderHelper.enableGUIStandardItemLighting();
                 itemRenderer.renderItemAndEffectIntoGUI(change.item.stack, 0, 0);
                 itemRenderer.renderItemOverlayIntoGUI(fontRenderer, change.item.stack, 0, 0, null);
@@ -220,9 +222,9 @@ public class ScrollingOverlay extends GuiScreen
     private int computeStrings(List<Triple<ChangeInfo, String[], Integer>> computedStrings, FontRenderer font)
     {
         int rectWidth = 0;
-        int itemsToShow = Math.min(Math.min(hard_limit, Config.softLimit + Config.fadeLimit), changeEntries.size());
+        int itemsToShow = Math.min(Math.min(hard_limit, ConfigData.softLimit + ConfigData.fadeLimit), changeEntries.size());
         int offset = Math.max(0, changeEntries.size() - itemsToShow);
-        int fadeOffset = changeEntries.size() - Config.softLimit - Config.fadeLimit;
+        int fadeOffset = changeEntries.size() - ConfigData.softLimit - ConfigData.fadeLimit;
 
         for (int i = offset; i < changeEntries.size(); i++)
         {
@@ -233,7 +235,7 @@ public class ScrollingOverlay extends GuiScreen
 
             rectWidth = Math.max(rectWidth, w);
 
-            computedStrings.add(Triple.of(change, parts, Math.min(Config.fadeLimit + 2, 1 + i - fadeOffset)));
+            computedStrings.add(Triple.of(change, parts, Math.min(ConfigData.fadeLimit + 2, 1 + i - fadeOffset)));
         }
         return rectWidth;
     }
@@ -242,7 +244,7 @@ public class ScrollingOverlay extends GuiScreen
     {
         String mode = change.mode == ChangeMode.Obtained ? "+" : "-";
         String s1 = String.format("%s%d", mode, change.count);
-        if (Config.drawName)
+        if (ConfigData.drawName)
         {
             String name = change.item.stack.getDisplayName().getFormattedText();
             String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
@@ -261,25 +263,30 @@ public class ScrollingOverlay extends GuiScreen
         if (event.phase != TickEvent.Phase.END)
             return;
 
-        if (!Config.showItemAdditions && !Config.showItemRemovals)
+        if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
 
-        EntityPlayer player = mc.player;
+        ClientPlayerEntity player = mc.field_71439_g;
 
         if (player == null)
             return;
 
         if (player != playerEntity)
         {
-            if (player.inventoryContainer != null)
+            /*if (player.field_71070_bA != null)
             {
-                player.inventoryContainer = new ContainerWrapper((ContainerPlayer) player.inventoryContainer, player, () ->
+                player.field_71070_bA = new ContainerWrapper((PlayerContainer) player.field_71070_bA, player, () ->
                 {
                     previous = null;
                     dimLoadTicks = 0;
                 });
-                playerEntity = player;
-            }
+            }*/
+            PlayerContainerHooks.setTarget(player.field_71070_bA, () ->
+            {
+                previous = null;
+                dimLoadTicks = 0;
+            });
+            playerEntity = player;
             previous = null;
         }
 
@@ -309,21 +316,21 @@ public class ScrollingOverlay extends GuiScreen
 
         if (previous == null ||
                 // I don't think this can happen but eh.
-                previous.length != player.inventory.getSizeInventory())
+                previous.length != player.field_71071_by.getSizeInventory())
         {
-            previous = new ItemStack[player.inventory.getSizeInventory()];
-            for (int i = 0; i < player.inventory.getSizeInventory(); i++)
+            previous = new ItemStack[player.field_71071_by.getSizeInventory()];
+            for (int i = 0; i < player.field_71071_by.getSizeInventory(); i++)
             {
-                previous[i] = safeCopy(player.inventory.getStackInSlot(i));
+                previous[i] = safeCopy(player.field_71071_by.getStackInSlot(i));
             }
-            previousInCursor = player.inventory.getItemStack();
+            previousInCursor = player.field_71071_by.getItemStack();
             return;
         }
 
         final List<Pair<ItemStack, ItemStack>> changes = Lists.newArrayList();
-        for (int i = 0; i < player.inventory.getSizeInventory(); i++)
+        for (int i = 0; i < player.field_71071_by.getSizeInventory(); i++)
         {
-            ItemStack stack = player.inventory.getStackInSlot(i);
+            ItemStack stack = player.field_71071_by.getStackInSlot(i);
             ItemStack old = previous[i];
             if (isChangeMeaningful(old, stack))
             {
@@ -332,7 +339,7 @@ public class ScrollingOverlay extends GuiScreen
             previous[i] = stack.copy();
         }
 
-        ItemStack stackInCursor = player.inventory.getItemStack();
+        ItemStack stackInCursor = player.field_71071_by.getItemStack();
         if (isChangeMeaningful(stackInCursor, previousInCursor))
             changes.add(Pair.of(previousInCursor, stackInCursor));
         previousInCursor = stackInCursor.copy();
@@ -391,7 +398,7 @@ public class ScrollingOverlay extends GuiScreen
 
     private boolean isBlacklisted(ItemStack left)
     {
-        return Config.ignoreItems.contains(left.getItem().getRegistryName().toString());
+        return ConfigData.ignoreItems.contains(left.getItem().getRegistryName().toString());
     }
 
     private boolean isChangeMeaningful(ItemStack a, ItemStack b)
@@ -402,7 +409,7 @@ public class ScrollingOverlay extends GuiScreen
         if (a == b || isStackEmpty(a) && isStackEmpty(b))
             return false;
 
-        if (a.getItem() == b.getItem() && Config.ignoreSubitemChanges.contains(a.getItem().getRegistryName().toString()))
+        if (a.getItem() == b.getItem() && ConfigData.ignoreSubitemChanges.contains(a.getItem().getRegistryName().toString()))
         {
             // If we are ignoring subitem changes, consider them the same.
             return false;
@@ -437,7 +444,7 @@ public class ScrollingOverlay extends GuiScreen
 
     private void obtainedItem(List<ChangeInfo> changeList, ItemStack item, int added)
     {
-        if (added <= 0 || !Config.showItemAdditions)
+        if (added <= 0 || !ConfigData.showItemAdditions)
             return;
 
         accumulate(changeList, item, ChangeMode.Obtained, added, true);
@@ -445,7 +452,7 @@ public class ScrollingOverlay extends GuiScreen
 
     private void lostItem(List<ChangeInfo> changeList, ItemStack item, int removed)
     {
-        if (removed <= 0 || !Config.showItemRemovals)
+        if (removed <= 0 || !ConfigData.showItemRemovals)
             return;
 
         accumulate(changeList, item, ChangeMode.Lost, removed, true);

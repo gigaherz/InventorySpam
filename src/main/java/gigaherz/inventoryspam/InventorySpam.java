@@ -1,6 +1,6 @@
 package gigaherz.inventoryspam;
 
-import gigaherz.inventoryspam.config.Config;
+import gigaherz.inventoryspam.config.ConfigData;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -21,19 +21,19 @@ public class InventorySpam
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientInit);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::bakeConfigs);
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.CLIENT_SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigData.CLIENT_SPEC);
 
         //ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> ConfigGuiFactory.createConfigGui(mc, screen));
     }
 
     public void bakeConfigs(ModConfig.ModConfigEvent event)
     {
-        if (event.getConfig().getSpec() == Config.CLIENT_SPEC)
-            Config.bake();
+        if (event.getConfig().getSpec() == ConfigData.CLIENT_SPEC)
+            ConfigData.bake();
     }
 
     private void clientInit(FMLClientSetupEvent event)
     {
-        ScrollingOverlay.init();
+        ScrollingOverlay.register();
     }
 }
