@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber
 public class ConfigData
 {
     public static final ClientConfig CLIENT;

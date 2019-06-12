@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -266,7 +267,7 @@ public class ScrollingOverlay extends Screen
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
 
-        ClientPlayerEntity player = mc.field_71439_g;
+        ClientPlayerEntity player = mc.player;
 
         if (player == null)
             return;
@@ -281,7 +282,7 @@ public class ScrollingOverlay extends Screen
                     dimLoadTicks = 0;
                 });
             }*/
-            PlayerContainerHooks.setTarget(player.field_71070_bA, () ->
+            PlayerContainerHooks.setTarget(player.container, () ->
             {
                 previous = null;
                 dimLoadTicks = 0;
@@ -314,23 +315,24 @@ public class ScrollingOverlay extends Screen
             changeEntries.removeIf((e) -> e.ttl <= 0 || e.count == 0);
         }
 
+        PlayerInventory inventory = player.inventory;
         if (previous == null ||
                 // I don't think this can happen but eh.
-                previous.length != player.field_71071_by.getSizeInventory())
+                previous.length != inventory.getSizeInventory())
         {
-            previous = new ItemStack[player.field_71071_by.getSizeInventory()];
-            for (int i = 0; i < player.field_71071_by.getSizeInventory(); i++)
+            previous = new ItemStack[inventory.getSizeInventory()];
+            for (int i = 0; i < inventory.getSizeInventory(); i++)
             {
-                previous[i] = safeCopy(player.field_71071_by.getStackInSlot(i));
+                previous[i] = safeCopy(inventory.getStackInSlot(i));
             }
-            previousInCursor = player.field_71071_by.getItemStack();
+            previousInCursor = inventory.getItemStack();
             return;
         }
 
         final List<Pair<ItemStack, ItemStack>> changes = Lists.newArrayList();
-        for (int i = 0; i < player.field_71071_by.getSizeInventory(); i++)
+        for (int i = 0; i < inventory.getSizeInventory(); i++)
         {
-            ItemStack stack = player.field_71071_by.getStackInSlot(i);
+            ItemStack stack = inventory.getStackInSlot(i);
             ItemStack old = previous[i];
             if (isChangeMeaningful(old, stack))
             {
@@ -339,7 +341,7 @@ public class ScrollingOverlay extends Screen
             previous[i] = stack.copy();
         }
 
-        ItemStack stackInCursor = player.field_71071_by.getItemStack();
+        ItemStack stackInCursor = inventory.getItemStack();
         if (isChangeMeaningful(stackInCursor, previousInCursor))
             changes.add(Pair.of(previousInCursor, stackInCursor));
         previousInCursor = stackInCursor.copy();
@@ -428,7 +430,7 @@ public class ScrollingOverlay extends Screen
     private static boolean areSameishItem(ItemStack a, ItemStack b)
     {
         return a == b
-                || isStackEmpty(a) && isStackEmpty(b)
+                || (isStackEmpty(a) && isStackEmpty(b))
                 || (ItemStack.areItemsEqual(a, b) && ItemStack.areItemStackTagsEqual(a, b));
     }
 
