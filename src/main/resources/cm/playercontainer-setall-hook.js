@@ -29,14 +29,16 @@ function initializeCoreMod() {
 	            method.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0 /*this*/));
 	            method.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1 /*items*/));
 	            method.instructions.add(new MethodInsnNode(
-	                Opcodes.INVOKESPECIAL, "net/minecraft/inventory/container/RecipeBookContainer", setAllName, "(Ljava/util/List;)V", false
+	                Opcodes.INVOKESPECIAL, "net/minecraft/inventory/container/RecipeBookContainer",
+	                setAllName, "(Ljava/util/List;)V", false
 	            ));
 
                 method.instructions.add(new LabelNode()); // hook call
 	            method.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0 /*this*/));
 	            method.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1 /*items*/));
 	            method.instructions.add(new MethodInsnNode(
-	                Opcodes.INVOKESTATIC, "gigaherz/inventoryspam/PlayerContainerHooks", "afterSetAll", "(Lnet/minecraft/inventory/container/PlayerContainer;Ljava/util/List;)V", false
+	                Opcodes.INVOKESTATIC, "gigaherz/inventoryspam/PlayerContainerHooks",
+	                "afterSetAll", "(Lnet/minecraft/inventory/container/PlayerContainer;Ljava/util/List;)V", false
 	            ));
 
                 method.instructions.add(new LabelNode()); // return
