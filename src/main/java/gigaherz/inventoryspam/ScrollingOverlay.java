@@ -1,7 +1,7 @@
 package gigaherz.inventoryspam;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import gigaherz.inventoryspam.config.ConfigData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -62,8 +62,8 @@ public class ScrollingOverlay extends Screen
             return;
 
 
-        int width = mc.mainWindow.getScaledWidth();
-        int height = mc.mainWindow.getScaledHeight();
+        int width = mc.func_228018_at_().getScaledWidth();
+        int height = mc.func_228018_at_().getScaledHeight();
 
         width = (int) (width / ConfigData.drawScale);
         height = (int) (height / ConfigData.drawScale);
@@ -99,8 +99,8 @@ public class ScrollingOverlay extends Screen
                 return;
         }
 
-        GlStateManager.pushMatrix();
-        GlStateManager.scaled(ConfigData.drawScale, ConfigData.drawScale, 1);
+        RenderSystem.pushMatrix();
+        RenderSystem.scaled(ConfigData.drawScale, ConfigData.drawScale, 1);
 
         rectWidth += rightMargin;
 
@@ -194,7 +194,7 @@ public class ScrollingOverlay extends Screen
                     break;
             }
 
-            GlStateManager.enableBlend();
+            RenderSystem.enableBlend();
             int wAcc = 0;
             for (int n = 0; n < strings.length; n++)
             {
@@ -204,20 +204,20 @@ public class ScrollingOverlay extends Screen
 
             if (ConfigData.drawIcon)
             {
-                GlStateManager.pushMatrix();
-                GlStateManager.translatef(x + 2 + w + leftMargin, y + topMargin2, 0);
-                GlStateManager.scaled(ConfigData.iconScale, ConfigData.iconScale, 1);
-                RenderHelper.enableGUIStandardItemLighting();
+                RenderSystem.pushMatrix();
+                RenderSystem.translatef(x + 2 + w + leftMargin, y + topMargin2, 0);
+                RenderSystem.scaled(ConfigData.iconScale, ConfigData.iconScale, 1);
+                RenderHelper.func_227780_a_();
                 itemRenderer.renderItemAndEffectIntoGUI(change.item.stack, 0, 0);
                 itemRenderer.renderItemOverlayIntoGUI(fontRenderer, change.item.stack, 0, 0, null);
                 RenderHelper.disableStandardItemLighting();
-                GlStateManager.popMatrix();
+                RenderSystem.popMatrix();
             }
 
             y += lineHeight;
         }
 
-        GlStateManager.popMatrix();
+        RenderSystem.popMatrix();
     }
 
     private int computeStrings(List<Triple<ChangeInfo, String[], Integer>> computedStrings, FontRenderer font)
