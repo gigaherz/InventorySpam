@@ -62,8 +62,8 @@ public class ScrollingOverlay extends Screen
             return;
 
 
-        int width = mc.func_228018_at_().getScaledWidth();
-        int height = mc.func_228018_at_().getScaledHeight();
+        int width = mc.getMainWindow().getScaledWidth();
+        int height = mc.getMainWindow().getScaledHeight();
 
         width = (int) (width / ConfigData.drawScale);
         height = (int) (height / ConfigData.drawScale);
@@ -207,7 +207,7 @@ public class ScrollingOverlay extends Screen
                 RenderSystem.pushMatrix();
                 RenderSystem.translatef(x + 2 + w + leftMargin, y + topMargin2, 0);
                 RenderSystem.scaled(ConfigData.iconScale, ConfigData.iconScale, 1);
-                RenderHelper.func_227780_a_();
+                RenderHelper.enableStandardItemLighting();
                 itemRenderer.renderItemAndEffectIntoGUI(change.item.stack, 0, 0);
                 itemRenderer.renderItemOverlayIntoGUI(fontRenderer, change.item.stack, 0, 0, null);
                 RenderHelper.disableStandardItemLighting();

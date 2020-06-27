@@ -20,7 +20,7 @@ repositories {
 
 version = "1.2.3"
 group = "gigaherz.inventoryspam" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "InventorySpam-1.15.1"
+archivesBaseName = "InventorySpam-1.15.2"
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -28,7 +28,7 @@ compileJava {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20191222-1.14.3'
+    mappings channel: 'snapshot', version: '20200615-1.15.1'
     
     accessTransformer = file('dummy/accesstransformer.cfg')
 
@@ -60,7 +60,7 @@ minecraft {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.15.1-30.0.15'
+    minecraft 'net.minecraftforge:forge:1.15.2-31.2.19'
 }
 
 jar {
