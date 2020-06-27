@@ -1,8 +1,6 @@
-
 buildscript {
     repositories {
-        mavenLocal()
-        maven { url = 'http://files.minecraftforge.net/maven' }
+        maven { url = 'https://files.minecraftforge.net/maven' }
         jcenter()
         mavenCentral()
     }
@@ -18,19 +16,18 @@ repositories {
     mavenLocal()
 }
 
-version = "1.2.3"
-group = "gigaherz.inventoryspam" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "InventorySpam-1.15.2"
+version = "1.2.4"
+group = "gigaherz.inventoryspam"
+archivesBaseName = "InventorySpam-UNKNOWN"
 
-sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
+project.afterEvaluate {
+    archivesBaseName = "InventorySpam-${project.MC_VERSION}"
 }
 
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+
 minecraft {
-    mappings channel: 'snapshot', version: '20200615-1.15.1'
-    
-    accessTransformer = file('dummy/accesstransformer.cfg')
+    mappings channel: 'snapshot', version: '20200514-1.16'
 
     runs {
         client {
@@ -42,7 +39,11 @@ minecraft {
 
             ideaModule "${project.name}.main"
 
-            environment 'MOD_CLASSES', "${project.file("out/production/resources").canonicalPath};${project.file("out/production/classes").canonicalPath}"
+            mods {
+                thismod {
+                    source sourceSets.main
+                }
+            }
         }
 
         server {
@@ -54,13 +55,17 @@ minecraft {
 
             ideaModule "${project.name}.main"
 
-            environment 'MOD_CLASSES', "${project.file("out/production/resources").canonicalPath};${project.file("out/production/classes").canonicalPath}"
+            mods {
+                thismod {
+                    source sourceSets.main
+                }
+            }
         }
     }
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.15.2-31.2.19'
+    minecraft 'net.minecraftforge:forge:1.16.1-32.0.23'
 }
 
 jar {

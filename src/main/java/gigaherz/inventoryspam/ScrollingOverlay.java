@@ -1,6 +1,7 @@
 package gigaherz.inventoryspam;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import gigaherz.inventoryspam.config.ConfigData;
 import net.minecraft.client.Minecraft;
@@ -12,9 +13,11 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.Dimension;
+import net.minecraft.world.DimensionType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -37,7 +40,7 @@ public class ScrollingOverlay extends Screen
 
     private int hard_limit;
 
-    private DimensionType dim;
+    private RegistryKey<DimensionType> dim;
     private int dimLoadTicks;
     private ItemStack[] previous;
     private PlayerEntity playerEntity;
@@ -61,6 +64,7 @@ public class ScrollingOverlay extends Screen
         if (event.getType() != RenderGameOverlayEvent.ElementType.CHAT)
             return;
 
+        MatrixStack matrixStack = event.getMatrixStack();
 
         int width = mc.getMainWindow().getScaledWidth();
         int height = mc.getMainWindow().getScaledHeight();
@@ -158,7 +162,7 @@ public class ScrollingOverlay extends Screen
                 break;
         }
 
-        fill(x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
+        func_238467_a_(matrixStack,x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
 
         for (Triple<ChangeInfo, String[], Integer> e : computedStrings)
         {
@@ -198,7 +202,7 @@ public class ScrollingOverlay extends Screen
             int wAcc = 0;
             for (int n = 0; n < strings.length; n++)
             {
-                fontRenderer.drawStringWithShadow(strings[n], x + leftMargin + wAcc, y + topMargin1, color);
+                fontRenderer.func_238405_a_(matrixStack, strings[n], x + leftMargin + wAcc, y + topMargin1, color);
                 wAcc += widths[n];
             }
 
@@ -247,7 +251,7 @@ public class ScrollingOverlay extends Screen
         String s1 = String.format("%s%d", mode, change.count);
         if (ConfigData.drawName)
         {
-            String name = change.item.stack.getDisplayName().getFormattedText();
+            String name = change.item.stack.getDisplayName().getString();
             String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
             String s2 = String.format("%s%s", italics, name);
             return new String[]{s1, " ", s2};
@@ -291,11 +295,11 @@ public class ScrollingOverlay extends Screen
             previous = null;
         }
 
-        if (player.dimension != dim)
+        if (player.world.func_234922_V_() != dim)
         {
             previous = null;
             dimLoadTicks = 200;
-            dim = player.dimension;
+            dim = player.world.func_234922_V_();
         }
 
         if (dimLoadTicks > 0)
