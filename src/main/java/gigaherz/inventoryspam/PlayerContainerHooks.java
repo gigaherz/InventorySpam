@@ -23,4 +23,9 @@ public class PlayerContainerHooks
         PlayerContainerHooks.original = (net.minecraft.inventory.container.PlayerContainer)container;
         PlayerContainerHooks.callback = callback;
     }
+
+    public static PlayerContainer getOriginalContainer()
+    {
+        return original;
+    }
 }

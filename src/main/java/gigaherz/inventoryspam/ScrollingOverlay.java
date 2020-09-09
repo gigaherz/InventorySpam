@@ -16,8 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.Dimension;
-import net.minecraft.world.DimensionType;
+import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -40,7 +39,7 @@ public class ScrollingOverlay extends Screen
 
     private int hard_limit;
 
-    private RegistryKey<DimensionType> dim;
+    private RegistryKey<World> dim;
     private int dimLoadTicks;
     private ItemStack[] previous;
     private PlayerEntity playerEntity;
@@ -162,7 +161,7 @@ public class ScrollingOverlay extends Screen
                 break;
         }
 
-        func_238467_a_(matrixStack,x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
+        fill(matrixStack,x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
 
         for (Triple<ChangeInfo, String[], Integer> e : computedStrings)
         {
@@ -202,7 +201,7 @@ public class ScrollingOverlay extends Screen
             int wAcc = 0;
             for (int n = 0; n < strings.length; n++)
             {
-                fontRenderer.func_238405_a_(matrixStack, strings[n], x + leftMargin + wAcc, y + topMargin1, color);
+                fontRenderer.drawStringWithShadow(matrixStack, strings[n], x + leftMargin + wAcc, y + topMargin1, color);
                 wAcc += widths[n];
             }
 
@@ -276,16 +275,8 @@ public class ScrollingOverlay extends Screen
         if (player == null)
             return;
 
-        if (player != playerEntity)
+        if (player != playerEntity || player.container != PlayerContainerHooks.getOriginalContainer())
         {
-            /*if (player.field_71070_bA != null)
-            {
-                player.field_71070_bA = new ContainerWrapper((PlayerContainer) player.field_71070_bA, player, () ->
-                {
-                    previous = null;
-                    dimLoadTicks = 0;
-                });
-            }*/
             PlayerContainerHooks.setTarget(player.container, () ->
             {
                 previous = null;
@@ -295,11 +286,11 @@ public class ScrollingOverlay extends Screen
             previous = null;
         }
 
-        if (player.world.func_234922_V_() != dim)
+        if (player.world.getDimensionKey() != dim)
         {
             previous = null;
-            dimLoadTicks = 200;
-            dim = player.world.func_234922_V_();
+            dimLoadTicks = 50;
+            dim = player.world.getDimensionKey();
         }
 
         if (dimLoadTicks > 0)
