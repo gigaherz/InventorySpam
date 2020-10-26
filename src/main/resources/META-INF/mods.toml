@@ -9,7 +9,7 @@ license="BSD (3 clause)"
 
 [[mods]] #mandatory
 modId="inventoryspam" #mandatory
-version="${version}" #mandatory
+version="${file.jarVersion}" #mandatory
 displayName="Inventory Spam" #mandatory
 description='''
 Shows the items added and removed from the inventory
