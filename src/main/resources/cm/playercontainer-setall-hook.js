@@ -35,14 +35,14 @@ function initializeCoreMod() {
 
     function ret() { return new InsnNode(Opcodes.RETURN); }
 
-	return {
-		'InventorySpam PlayerContainer Transformer': {
-			'target': {
-				'type': 'CLASS',
-				'name': "net.minecraft.inventory.container.PlayerContainer"
-			},
-			'transformer': function(classNode) {
-	            var name_setAll = ASMAPI.mapMethod("func_190896_a");
+    return {
+        'InventorySpam PlayerContainer Transformer': {
+            'target': {
+                'type': 'CLASS',
+                'name': "net.minecraft.inventory.container.PlayerContainer"
+            },
+            'transformer': function(classNode) {
+                var name_setAll = ASMAPI.mapMethod("func_190896_a");
 
                 var method = new MethodNode(
                     /* access = */ Opcodes.ACC_PUBLIC,
@@ -55,24 +55,24 @@ function initializeCoreMod() {
                 // super call
                 addAll(method.instructions,
                     label(),
-	                aload0(), /*this*/
-	                aload1(), /*items*/
-	                invokeSpecial(
-	                    "net/minecraft/inventory/container/RecipeBookContainer",
-	                    name_setAll, "(Ljava/util/List;)V", false
-	                )
+                    aload0(), /*this*/
+                    aload1(), /*items*/
+                    invokeSpecial(
+                        "net/minecraft/inventory/container/RecipeBookContainer",
+                        name_setAll, "(Ljava/util/List;)V", false
+                    )
                 );
 
                 // hook call
                 addAll(method.instructions,
                     label(),
-	                aload0(), /*this*/
-	                aload1(), /*items*/
-	                invokeStatic(
-	                    "gigaherz/inventoryspam/PlayerContainerHooks",
-	                    "afterSetAll", "(Lnet/minecraft/inventory/container/PlayerContainer;Ljava/util/List;)V", false
-	                )
-	            );
+                    aload0(), /*this*/
+                    aload1(), /*items*/
+                    invokeStatic(
+                        "gigaherz/inventoryspam/PlayerContainerHooks",
+                        "afterSetAll", "(Lnet/minecraft/inventory/container/PlayerContainer;Ljava/util/List;)V", false
+                    )
+                );
 
                 // return
                 addAll(method.instructions,
@@ -80,10 +80,10 @@ function initializeCoreMod() {
                      ret()
                 );
 
-				classNode.methods.add(method);
+                classNode.methods.add(method);
 
-				return classNode;
-			}
-		}
-	}
+                return classNode;
+            }
+        }
+    }
 }
