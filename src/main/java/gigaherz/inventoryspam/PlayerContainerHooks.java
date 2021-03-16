@@ -11,8 +11,7 @@ public class PlayerContainerHooks
     private static PlayerContainer original;
     private static Runnable callback;
 
-    @SuppressWarnings("unused")
-    public static void afterSetAll(PlayerContainer playerContainer, List<ItemStack> stacks)
+    public static void afterSetAll(PlayerContainer playerContainer)
     {
         if (playerContainer == original && callback != null)
             callback.run();

@@ -30,6 +30,6 @@ public abstract class PlayerContainerMixin extends RecipeBookContainer<CraftingI
     @Inject(method = "setAll(Ljava/util/List;)V", at = @At("RETURN"))
     public void setAllHook(List<ItemStack> stacks, CallbackInfo callbackInfo)
     {
-        PlayerContainerHooks.afterSetAll((PlayerContainer)(Object)this, stacks);
+        PlayerContainerHooks.afterSetAll((PlayerContainer)(Object)this);
     }
 }

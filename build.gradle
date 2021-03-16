@@ -18,7 +18,7 @@ repositories {
     mavenLocal()
 }
 
-version = "1.3.0"
+version = "1.3.1"
 group = "gigaherz.inventoryspam"
 archivesBaseName = "InventorySpam-UNKNOWN"
 
@@ -33,7 +33,7 @@ mixin {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20200820-1.16.1'
+    mappings channel: 'snapshot', version: '20210309-1.16.5'
 
     runs {
         client {
@@ -90,7 +90,8 @@ jar {
                 "Implementation-Title": project.name,
                 "Implementation-Version": "${version}",
                 "Implementation-Vendor" :"gigaherz",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "MixinConfigs": "inventoryspam.mixins.json"
         ])
     }
 }
