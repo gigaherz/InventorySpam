@@ -18,7 +18,7 @@ repositories {
     mavenLocal()
 }
 
-version = "1.3.1"
+version = "1.3.2"
 group = "gigaherz.inventoryspam"
 archivesBaseName = "InventorySpam-UNKNOWN"
 
@@ -93,5 +93,17 @@ jar {
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 "MixinConfigs": "inventoryspam.mixins.json"
         ])
+    }
+}
+
+////////////////
+// IntelliJ Project Import
+// The Mixin annotation process does not have an obfuscation source when running through the IntelliJ compiler,
+// thus we have to prevent it from being activated as part of importing this Gradle project into IntelliJ.
+if (System.getProperty("idea.sync.active") == "true") {
+    afterEvaluate {
+        tasks.withType(JavaCompile).all {
+            it.options.annotationProcessorPath = files()
+        }
     }
 }

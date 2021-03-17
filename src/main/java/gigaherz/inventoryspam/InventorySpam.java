@@ -1,6 +1,8 @@
 package gigaherz.inventoryspam;
 
 import gigaherz.inventoryspam.config.ConfigData;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;

@@ -17,6 +17,7 @@ import net.minecraft.util.RegistryKey;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -52,6 +53,12 @@ public class ScrollingOverlay extends Screen
     private ScrollingOverlay()
     {
         super(new StringTextComponent("OVERLAY"));
+    }
+
+    @SubscribeEvent
+    public void clientLogOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
+    {
+        changeEntries.clear();
     }
 
     @SubscribeEvent
