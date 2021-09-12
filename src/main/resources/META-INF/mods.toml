@@ -1,5 +1,5 @@
 modLoader="javafml" #mandatory
-loaderVersion="[32,)" #mandatory
+loaderVersion="[37,)" #mandatory
 issueTrackerURL="https://github.com/gigaherz/InventorySpam/issues" #optional
 displayURL="https://github.com/gigaherz/InventorySpam" #optional
 logoFile="logo.png" #optional
@@ -18,12 +18,12 @@ Shows the items added and removed from the inventory
 [[dependencies.inventoryspam]] #optional
     modId="forge" #mandatory
     mandatory=true #mandatory
-    versionRange="[32.0,)" #mandatory
+    versionRange="[37.0.59,)" #mandatory
     ordering="NONE"
     side="BOTH"
 [[dependencies.inventoryspam]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.1,1.17)"
+    versionRange="[1.17.1,1.18)"
     ordering="NONE"
     side="BOTH"

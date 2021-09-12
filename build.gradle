@@ -1,7 +1,7 @@
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        maven {url='https://repo.spongepowered.org/repository/maven-public/'}
+        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url='https://repo.spongepowered.org/repository/maven-public/' }
         mavenCentral()
     }
     dependencies {
@@ -15,12 +15,16 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'maven-publish'
 
 repositories {
-    mavenLocal()
+    mavenCentral() {
+        content {
+            excludeGroup 'com.google.guava'
+        }
+    }
 }
 
-version = "1.3.2"
+version = "1.4.0"
 group = "gigaherz.inventoryspam"
-archivesBaseName = "InventorySpam-1.16.5"
+archivesBaseName = "InventorySpam-1.17.1"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
