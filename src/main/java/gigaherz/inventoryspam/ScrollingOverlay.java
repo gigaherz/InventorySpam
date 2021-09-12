@@ -1,24 +1,28 @@
 package gigaherz.inventoryspam;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import gigaherz.inventoryspam.config.ConfigData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.renderer.ItemRenderer;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import com.mojang.blaze3d.platform.Lighting;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.gui.ForgeIngameGui;
+import net.minecraftforge.client.gui.IIngameOverlay;
+import net.minecraftforge.client.gui.OverlayRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -28,11 +32,14 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.util.Arrays;
 import java.util.List;
 
-public class ScrollingOverlay extends Screen
+public class ScrollingOverlay extends GuiComponent implements IIngameOverlay
 {
+    private static final ScrollingOverlay INSTANCE = new ScrollingOverlay();
+
     public static void register()
     {
-        MinecraftForge.EVENT_BUS.register(new ScrollingOverlay());
+        MinecraftForge.EVENT_BUS.register(INSTANCE);
+        OverlayRegistry.registerOverlayAbove(ForgeIngameGui.CHAT_PANEL_ELEMENT, "inventoryspam.overlay", INSTANCE);
     }
 
     private static final int TTL = 240;
@@ -40,20 +47,15 @@ public class ScrollingOverlay extends Screen
 
     private int hard_limit;
 
-    private RegistryKey<World> dim;
+    private ResourceKey<Level> dim;
     private int dimLoadTicks;
     private ItemStack[] previous;
-    private PlayerEntity playerEntity;
+    private Player playerEntity;
 
     private ItemStack previousInCursor = ItemStack.EMPTY;
     private final List<ChangeInfo> changeEntries = Lists.newArrayList();
 
     private final Minecraft mc = Minecraft.getInstance();
-
-    private ScrollingOverlay()
-    {
-        super(new StringTextComponent("OVERLAY"));
-    }
 
     @SubscribeEvent
     public void clientLogOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
@@ -61,32 +63,24 @@ public class ScrollingOverlay extends Screen
         changeEntries.clear();
     }
 
-    @SubscribeEvent
-    public void renderOverlay(RenderGameOverlayEvent.Post event)
+    @Override
+    public void render(ForgeIngameGui gui, PoseStack matrixStack, float partialTicks, int width, int height)
     {
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
 
-        if (event.getType() != RenderGameOverlayEvent.ElementType.CHAT)
-            return;
-
-        MatrixStack matrixStack = event.getMatrixStack();
-
-        int width = mc.getMainWindow().getScaledWidth();
-        int height = mc.getMainWindow().getScaledHeight();
-
         width = (int) (width / ConfigData.drawScale);
         height = (int) (height / ConfigData.drawScale);
 
-        FontRenderer fontRenderer = mc.fontRenderer;
+        Font fontRenderer = mc.font;
         ItemRenderer itemRenderer = mc.getItemRenderer();
 
         int iconSize = (int) (16 * ConfigData.iconScale);
         int rightMargin = ConfigData.drawIcon ? (2 + iconSize) : 0;
-        int topMargin1 = 2 + (ConfigData.drawIcon ? Math.max(0, (iconSize - fontRenderer.FONT_HEIGHT) / 2) : 0);
-        int topMargin2 = 1 + Math.max(0, -(iconSize - fontRenderer.FONT_HEIGHT) / 2);
+        int topMargin1 = 2 + (ConfigData.drawIcon ? Math.max(0, (iconSize - fontRenderer.lineHeight) / 2) : 0);
+        int topMargin2 = 1 + Math.max(0, -(iconSize - fontRenderer.lineHeight) / 2);
 
-        int lineHeight = fontRenderer.FONT_HEIGHT;
+        int lineHeight = fontRenderer.lineHeight;
         if (ConfigData.drawIcon)
             lineHeight = Math.max(2 + iconSize, lineHeight);
 
@@ -109,8 +103,8 @@ public class ScrollingOverlay extends Screen
                 return;
         }
 
-        RenderSystem.pushMatrix();
-        RenderSystem.scaled(ConfigData.drawScale, ConfigData.drawScale, 1);
+        matrixStack.pushPose();
+        matrixStack.scale(ConfigData.drawScale, ConfigData.drawScale, 1);
 
         rectWidth += rightMargin;
 
@@ -181,7 +175,7 @@ public class ScrollingOverlay extends Screen
             for (int n = 0; n < strings.length; n++)
             {
                 String str = strings[n];
-                int wn = widths[n] = fontRenderer.getStringWidth(str);
+                int wn = widths[n] = fontRenderer.width(str);
                 w += wn;
             }
 
@@ -208,29 +202,30 @@ public class ScrollingOverlay extends Screen
             int wAcc = 0;
             for (int n = 0; n < strings.length; n++)
             {
-                fontRenderer.drawStringWithShadow(matrixStack, strings[n], x + leftMargin + wAcc, y + topMargin1, color);
+                fontRenderer.drawShadow(matrixStack, strings[n], x + leftMargin + wAcc, y + topMargin1, color);
                 wAcc += widths[n];
             }
 
             if (ConfigData.drawIcon)
             {
-                RenderSystem.pushMatrix();
-                RenderSystem.translatef(x + 2 + w + leftMargin, y + topMargin2, 0);
-                RenderSystem.scaled(ConfigData.iconScale, ConfigData.iconScale, 1);
-                RenderHelper.enableStandardItemLighting();
-                itemRenderer.renderItemAndEffectIntoGUI(change.item.stack, 0, 0);
-                itemRenderer.renderItemOverlayIntoGUI(fontRenderer, change.item.stack, 0, 0, null);
-                RenderHelper.disableStandardItemLighting();
-                RenderSystem.popMatrix();
+                PoseStack viewModelPose = RenderSystem.getModelViewStack();
+                viewModelPose.pushPose();
+                viewModelPose.mulPoseMatrix(matrixStack.last().pose());
+                viewModelPose.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
+                RenderSystem.applyModelViewMatrix();
+                itemRenderer.renderAndDecorateItem(change.item.stack, 0, 0);
+                itemRenderer.renderGuiItemDecorations(fontRenderer, change.item.stack, 0, 0, null);
+                viewModelPose.popPose();
+                RenderSystem.applyModelViewMatrix();
             }
 
             y += lineHeight;
         }
 
-        RenderSystem.popMatrix();
+        matrixStack.popPose();
     }
 
-    private int computeStrings(List<Triple<ChangeInfo, String[], Integer>> computedStrings, FontRenderer font)
+    private int computeStrings(List<Triple<ChangeInfo, String[], Integer>> computedStrings, Font font)
     {
         int rectWidth = 0;
         int itemsToShow = Math.min(Math.min(hard_limit, ConfigData.softLimit + ConfigData.fadeLimit), changeEntries.size());
@@ -242,7 +237,7 @@ public class ScrollingOverlay extends Screen
             ChangeInfo change = changeEntries.get(i);
             String[] parts = getChangeStrings(change);
 
-            int w = Arrays.stream(parts).mapToInt(font::getStringWidth).sum();
+            int w = Arrays.stream(parts).mapToInt(font::width).sum();
 
             rectWidth = Math.max(rectWidth, w);
 
@@ -257,8 +252,8 @@ public class ScrollingOverlay extends Screen
         String s1 = String.format("%s%d", mode, change.count);
         if (ConfigData.drawName)
         {
-            String name = change.item.stack.getDisplayName().getString();
-            String italics = change.item.stack.hasDisplayName() ? "" + TextFormatting.ITALIC : "";
+            String name = change.item.stack.getHoverName().getString();
+            String italics = change.item.stack.hasCustomHoverName() ? "" + ChatFormatting.ITALIC : "";
             String s2 = String.format("%s%s", italics, name);
             return new String[]{s1, " ", s2};
         }
@@ -277,14 +272,14 @@ public class ScrollingOverlay extends Screen
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
 
-        ClientPlayerEntity player = mc.player;
+        LocalPlayer player = mc.player;
 
         if (player == null)
             return;
 
-        if (player != playerEntity || player.container != PlayerContainerHooks.getOriginalContainer())
+        if (player != playerEntity || player.inventoryMenu != PlayerContainerHooks.getOriginalContainer())
         {
-            PlayerContainerHooks.setTarget(player.container, () ->
+            PlayerContainerHooks.setTarget(player.inventoryMenu, () ->
             {
                 previous = null;
                 dimLoadTicks = 0;
@@ -293,11 +288,11 @@ public class ScrollingOverlay extends Screen
             previous = null;
         }
 
-        if (player.world.getDimensionKey() != dim)
+        if (player.level.dimension() != dim)
         {
             previous = null;
             dimLoadTicks = 50;
-            dim = player.world.getDimensionKey();
+            dim = player.level.dimension();
         }
 
         if (dimLoadTicks > 0)
@@ -317,24 +312,28 @@ public class ScrollingOverlay extends Screen
             changeEntries.removeIf((e) -> e.ttl <= 0 || e.count == 0);
         }
 
-        PlayerInventory inventory = player.inventory;
+        Inventory inventory = player.getInventory();
         if (previous == null ||
                 // I don't think this can happen but eh.
-                previous.length != inventory.getSizeInventory())
+                previous.length != inventory.getContainerSize())
         {
-            previous = new ItemStack[inventory.getSizeInventory()];
-            for (int i = 0; i < inventory.getSizeInventory(); i++)
+            previous = new ItemStack[inventory.getContainerSize()];
+            for (int i = 0; i < inventory.getContainerSize(); i++)
             {
-                previous[i] = safeCopy(inventory.getStackInSlot(i));
+                previous[i] = safeCopy(inventory.getItem(i));
             }
-            previousInCursor = inventory.getItemStack();
+
+            var currentMenu = player.containerMenu;
+            previousInCursor = currentMenu.getCarried();
+
             return;
         }
 
+
         final List<Pair<ItemStack, ItemStack>> changes = Lists.newArrayList();
-        for (int i = 0; i < inventory.getSizeInventory(); i++)
+        for (int i = 0; i < inventory.getContainerSize(); i++)
         {
-            ItemStack stack = inventory.getStackInSlot(i);
+            ItemStack stack = inventory.getItem(i);
             ItemStack old = previous[i];
             if (isChangeMeaningful(old, stack))
             {
@@ -343,7 +342,8 @@ public class ScrollingOverlay extends Screen
             previous[i] = stack.copy();
         }
 
-        ItemStack stackInCursor = inventory.getItemStack();
+        var currentMenu = player.containerMenu;
+        ItemStack stackInCursor = currentMenu.getCarried();
         if (isChangeMeaningful(stackInCursor, previousInCursor))
             changes.add(Pair.of(previousInCursor, stackInCursor));
         previousInCursor = stackInCursor.copy();
@@ -419,21 +419,21 @@ public class ScrollingOverlay extends Screen
             return false;
         }
 
-        return !ItemStack.areItemsEqualIgnoreDurability(a, b);
+        return !ItemStack.isSameIgnoreDurability(a, b);
     }
 
     private static boolean areLooselyTheSame(ItemStack a, ItemStack b)
     {
         return a == b
                 || isStackEmpty(a) && isStackEmpty(b)
-                || ItemStack.areItemsEqualIgnoreDurability(a, b);
+                || ItemStack.isSameIgnoreDurability(a, b);
     }
 
     private static boolean areSameishItem(ItemStack a, ItemStack b)
     {
         return a == b
                 || (isStackEmpty(a) && isStackEmpty(b))
-                || (ItemStack.areItemsEqual(a, b) && ItemStack.areItemStackTagsEqual(a, b));
+                || (ItemStack.isSame(a, b) && ItemStack.tagMatches(a, b));
     }
 
     private static boolean isStackEmpty(ItemStack stack)

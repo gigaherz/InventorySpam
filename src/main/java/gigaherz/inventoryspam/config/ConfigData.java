@@ -105,8 +105,8 @@ public class ConfigData
     public static int drawOffsetHorizontal;
     public static int drawOffsetVertical;
     public static DrawPosition drawPosition = DrawPosition.BottomRight;
-    public static double drawScale = 1.0;
-    public static double iconScale = 0.6;
+    public static float drawScale = 1.0f;
+    public static float iconScale = 0.6f;
     public static int softLimit = 10;
     public static int fadeLimit = 5;
 
@@ -137,8 +137,8 @@ public class ConfigData
         drawOffsetHorizontal = CLIENT.drawOffsetHorizontal.get();
         drawOffsetVertical = CLIENT.drawOffsetVertical.get();
 
-        drawScale = CLIENT.drawScale.get();
-        iconScale = CLIENT.iconScale.get();
+        drawScale = CLIENT.drawScale.get().floatValue();
+        iconScale = CLIENT.iconScale.get().floatValue();
 
         softLimit = CLIENT.softLimit.get();
         fadeLimit = CLIENT.fadeLimit.get();

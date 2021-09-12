@@ -1,11 +1,11 @@
 package gigaherz.inventoryspam.mixin;
 
 import gigaherz.inventoryspam.PlayerContainerHooks;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.inventory.container.PlayerContainer;
-import net.minecraft.inventory.container.RecipeBookContainer;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.RecipeBookMenu;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,23 +13,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(value = PlayerContainer.class, priority = 0)
-public abstract class PlayerContainerMixin extends RecipeBookContainer<CraftingInventory>
+@Mixin(value = InventoryMenu.class, priority = 0)
+public abstract class PlayerContainerMixin extends RecipeBookMenu<CraftingContainer>
 {
-    public PlayerContainerMixin(ContainerType<?> type, int id)
+    public PlayerContainerMixin(MenuType<?> type, int id)
     {
         super(type, id);
     }
 
     @Override
-    public void setAll(List<ItemStack> stacks)
+    public void initializeContents(int i, List<ItemStack> stacks, ItemStack held)
     {
-        super.setAll(stacks);
+        super.initializeContents(i, stacks, held);
     }
 
-    @Inject(method = "setAll(Ljava/util/List;)V", at = @At("RETURN"))
-    public void setAllHook(List<ItemStack> stacks, CallbackInfo callbackInfo)
+    @Inject(method = "initializeContents(ILjava/util/List;Lnet/minecraft/world/item/ItemStack;)V", at = @At("RETURN"))
+    public void initializeContentsHook(int i, List<ItemStack> stacks, ItemStack held, CallbackInfo callbackInfo)
     {
-        PlayerContainerHooks.afterSetAll((PlayerContainer)(Object)this);
+        //noinspection ConstantConditions
+        PlayerContainerHooks.afterSetAll((InventoryMenu)(Object)this);
     }
 }
