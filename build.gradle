@@ -22,18 +22,18 @@ repositories {
     }
 }
 
-version = "1.4.0"
+version = "1.5.0"
 group = "gigaherz.inventoryspam"
-archivesBaseName = "InventorySpam-1.17.1"
+archivesBaseName = "InventorySpam-1.18"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 mixin {
     add sourceSets.main, "inventoryspam.refmap.json"
 }
 
 minecraft {
-    mappings channel: 'official', version: '1.17.1'
+    mappings channel: 'official', version: '1.18'
 
     runs {
         client {
@@ -73,7 +73,7 @@ minecraft {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.17.1-37.0.59'
+    minecraft 'net.minecraftforge:forge:1.18-38.0.14'
     annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
 }
 
