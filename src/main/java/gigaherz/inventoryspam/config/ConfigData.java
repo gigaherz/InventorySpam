@@ -3,7 +3,6 @@ package gigaherz.inventoryspam.config;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.common.Mod;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
