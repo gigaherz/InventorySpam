@@ -114,52 +114,51 @@ public class ScrollingOverlay extends GuiComponent implements IIngameOverlay
         int align;
         switch (ConfigData.drawPosition)
         {
-            default:
-            case BottomRight:
+            default -> { // incl BottomRight
                 x = width - 2 - rectWidth - ConfigData.drawOffsetHorizontal;
                 y = height - 2 - rectHeight - ConfigData.drawOffsetVertical;
                 align = 1;
-                break;
-            case Bottom:
+            }
+            case Bottom -> {
                 x = (width - rectWidth) / 2 - 2 + ConfigData.drawOffsetHorizontal;
                 y = height - 2 - rectHeight - ConfigData.drawOffsetVertical;
                 align = 0;
-                break;
-            case BottomLeft:
+            }
+            case BottomLeft -> {
                 x = 2 + ConfigData.drawOffsetHorizontal;
                 y = height - 2 - rectHeight - ConfigData.drawOffsetVertical;
                 align = -1;
-                break;
-            case Left:
+            }
+            case Left -> {
                 x = 2 + ConfigData.drawOffsetHorizontal;
                 y = (height - rectHeight) / 2 - 2 + ConfigData.drawOffsetVertical;
                 align = -1;
-                break;
-            case TopLeft:
+            }
+            case TopLeft -> {
                 x = 2 + ConfigData.drawOffsetHorizontal;
                 y = 2 + ConfigData.drawOffsetVertical;
                 align = -1;
-                break;
-            case Top:
+            }
+            case Top -> {
                 x = (width - rectWidth) / 2 - 2 + ConfigData.drawOffsetHorizontal;
                 y = 2 + ConfigData.drawOffsetVertical;
                 align = 0;
-                break;
-            case TopRight:
+            }
+            case TopRight -> {
                 x = width - 2 - rectWidth - ConfigData.drawOffsetHorizontal;
                 y = 2 + ConfigData.drawOffsetVertical;
                 align = 1;
-                break;
-            case Right:
+            }
+            case Right -> {
                 x = width - 2 - rectWidth - ConfigData.drawOffsetHorizontal;
                 y = (height - rectHeight) / 2 - 2 + ConfigData.drawOffsetVertical;
                 align = 1;
-                break;
-            case Center:
+            }
+            case Center -> {
                 x = (width - rectWidth) / 2 - 2 + ConfigData.drawOffsetHorizontal;
                 y = (height - rectHeight) / 2 - 2 + ConfigData.drawOffsetVertical;
                 align = 0;
-                break;
+            }
         }
 
         fill(matrixStack,x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
@@ -184,19 +183,13 @@ public class ScrollingOverlay extends GuiComponent implements IIngameOverlay
             int alpha = Math.min(255, Math.min(forcedFade, ttlFade));
             int color = alpha << 24 | (change.mode == ChangeMode.Obtained ? 0x7FFF7F : 0xFF5F5F);
 
-            int leftMargin = 0;
-            switch (align)
+            int leftMargin = switch (align)
             {
-                case -1:
-                    leftMargin = 2;
-                    break;
-                case 0:
-                    leftMargin = (rectWidth - w - rightMargin) / 2;
-                    break;
-                case 1:
-                    leftMargin = rectWidth - w - rightMargin;
-                    break;
-            }
+                case -1 -> 2;
+                case 0 -> (rectWidth - w - rightMargin) / 2;
+                case 1 -> rectWidth - w - rightMargin;
+                default -> 0;
+            };
 
             RenderSystem.enableBlend();
             int wAcc = 0;
@@ -512,14 +505,12 @@ public class ScrollingOverlay extends GuiComponent implements IIngameOverlay
 
     private enum ChangeMode
     {
-        Obtained, Lost;
+        Obtained, Lost
     }
 
-    private static class ComparableItem
+    private record ComparableItem(ItemStack stack)
     {
-        ItemStack stack;
-
-        ComparableItem(ItemStack stack)
+        public ComparableItem(ItemStack stack)
         {
             this.stack = stack.copy();
             this.stack.setCount(1);
@@ -528,10 +519,8 @@ public class ScrollingOverlay extends GuiComponent implements IIngameOverlay
         @Override
         public boolean equals(Object obj)
         {
-            if (!(obj instanceof ComparableItem))
-                return false;
-            ItemStack stack = ((ComparableItem) obj).stack;
-            return areSameishItem(stack, this.stack);
+            return obj instanceof ComparableItem other
+                    && areSameishItem(other.stack, this.stack);
         }
 
         @Override
