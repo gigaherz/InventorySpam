@@ -15,13 +15,16 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.gui.ForgeIngameGui;
-import net.minecraftforge.client.gui.IIngameOverlay;
-import net.minecraftforge.client.gui.OverlayRegistry;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.gui.overlay.ForgeGui;
+import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -29,14 +32,14 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.util.Arrays;
 import java.util.List;
 
-public class ScrollingOverlay extends GuiComponent implements IIngameOverlay
+@Mod.EventBusSubscriber(value= Dist.CLIENT, modid=InventorySpam.MODID, bus= Mod.EventBusSubscriber.Bus.MOD)
+public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
 {
-    private static final ScrollingOverlay INSTANCE = new ScrollingOverlay();
 
-    public static void register()
+    @SubscribeEvent
+    public static void registerOverlay(RegisterGuiOverlaysEvent event)
     {
-        MinecraftForge.EVENT_BUS.register(INSTANCE);
-        OverlayRegistry.registerOverlayAbove(ForgeIngameGui.CHAT_PANEL_ELEMENT, "inventoryspam.overlay", INSTANCE);
+        event.registerAbove(VanillaGuiOverlay.CHAT_PANEL.id(), "inventoryspam.overlay", new ScrollingOverlay());
     }
 
     private static final int TTL = 240;
@@ -54,14 +57,19 @@ public class ScrollingOverlay extends GuiComponent implements IIngameOverlay
 
     private final Minecraft mc = Minecraft.getInstance();
 
+    public ScrollingOverlay()
+    {
+        MinecraftForge.EVENT_BUS.register(this);
+    }
+
     @SubscribeEvent
-    public void clientLogOut(ClientPlayerNetworkEvent.LoggedOutEvent event)
+    public void clientLogOut(ClientPlayerNetworkEvent.LoggingOut event)
     {
         changeEntries.clear();
     }
 
     @Override
-    public void render(ForgeIngameGui gui, PoseStack matrixStack, float partialTicks, int width, int height)
+    public void render(ForgeGui gui, PoseStack matrixStack, float partialTicks, int width, int height)
     {
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;

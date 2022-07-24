@@ -21,7 +21,6 @@ public class InventorySpam
     {
         instance = this;
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientInit);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::bakeConfigs);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigData.CLIENT_SPEC);
@@ -36,10 +35,5 @@ public class InventorySpam
     {
         if (event.getConfig().getSpec() == ConfigData.CLIENT_SPEC)
             ConfigData.bake();
-    }
-
-    private void clientInit(FMLClientSetupEvent event)
-    {
-        ScrollingOverlay.register();
     }
 }
