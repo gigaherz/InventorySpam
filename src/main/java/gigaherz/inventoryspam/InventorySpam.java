@@ -6,7 +6,6 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.NetworkConstants;
 
@@ -21,7 +20,7 @@ public class InventorySpam
     {
         instance = this;
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::bakeConfigs);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::readConfigs);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigData.CLIENT_SPEC);
 
@@ -31,9 +30,9 @@ public class InventorySpam
         //ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, screen) -> ConfigGuiFactory.createConfigGui(mc, screen));
     }
 
-    public void bakeConfigs(ModConfigEvent event)
+    public void readConfigs(ModConfigEvent event)
     {
         if (event.getConfig().getSpec() == ConfigData.CLIENT_SPEC)
-            ConfigData.bake();
+            ConfigData.refreshClient();
     }
 }

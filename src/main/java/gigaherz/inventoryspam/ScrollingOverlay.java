@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -166,7 +167,8 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
             }
         }
 
-        fill(matrixStack,x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, Integer.MIN_VALUE);
+        int backgroundColor = ((int) Mth.clamp(mc.options.textBackgroundOpacity().get() * 255, 0, 255)) << 24;
+        fill(matrixStack,x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, backgroundColor);
 
         for (Triple<ChangeInfo, String[], Integer> e : computedStrings)
         {
@@ -422,14 +424,14 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
             return false;
         }
 
-        return !ItemStack.isSameIgnoreDurability(a, b);
+        return !ItemStack.isSame(a, b);
     }
 
     private static boolean areLooselyTheSame(ItemStack a, ItemStack b)
     {
         return a == b
                 || isStackEmpty(a) && isStackEmpty(b)
-                || ItemStack.isSameIgnoreDurability(a, b);
+                || ItemStack.isSame(a, b);
     }
 
     private static boolean areSameishItem(ItemStack a, ItemStack b)

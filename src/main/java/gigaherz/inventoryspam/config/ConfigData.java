@@ -125,7 +125,7 @@ public class ConfigData
         Center
     }
 
-    public static void bake()
+    public static void refreshClient()
     {
         showItemAdditions = CLIENT.showItemAdditions.get();
         showItemRemovals = CLIENT.showItemRemovals.get();
