@@ -208,16 +208,12 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
 
             if (ConfigData.drawIcon)
             {
-                PoseStack viewModelPose = RenderSystem.getModelViewStack();
-                viewModelPose.pushPose();
-                viewModelPose.mulPoseMatrix(matrixStack.last().pose());
-                viewModelPose.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
-                viewModelPose.scale(ConfigData.iconScale, ConfigData.iconScale, 1);
-                RenderSystem.applyModelViewMatrix();
-                itemRenderer.renderAndDecorateItem(change.item.stack, 0, 0);
-                itemRenderer.renderGuiItemDecorations(fontRenderer, change.item.stack, 0, 0, null);
-                viewModelPose.popPose();
-                RenderSystem.applyModelViewMatrix();
+                matrixStack.pushPose();
+                matrixStack.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
+                matrixStack.scale(ConfigData.iconScale, ConfigData.iconScale, 1);
+                itemRenderer.renderAndDecorateItem(matrixStack, change.item.stack, 0, 0);
+                itemRenderer.renderGuiItemDecorations(matrixStack, fontRenderer, change.item.stack, 0, 0, null);
+                matrixStack.popPose();
             }
 
             y += lineHeight;
