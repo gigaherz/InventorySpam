@@ -7,7 +7,7 @@ import gigaherz.inventoryspam.config.ConfigData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.resources.ResourceKey;
@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Mod.EventBusSubscriber(value= Dist.CLIENT, modid=InventorySpam.MODID, bus= Mod.EventBusSubscriber.Bus.MOD)
-public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
+public class ScrollingOverlay implements IGuiOverlay
 {
 
     @SubscribeEvent
@@ -70,7 +70,7 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
     }
 
     @Override
-    public void render(ForgeGui gui, PoseStack matrixStack, float partialTicks, int width, int height)
+    public void render(ForgeGui gui, GuiGraphics graphics, float partialTicks, int width, int height)
     {
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
@@ -78,15 +78,15 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
         width = (int) (width / ConfigData.drawScale);
         height = (int) (height / ConfigData.drawScale);
 
-        Font fontRenderer = mc.font;
+        Font font = mc.font;
         ItemRenderer itemRenderer = mc.getItemRenderer();
 
         int iconSize = (int) (16 * ConfigData.iconScale);
         int rightMargin = ConfigData.drawIcon ? (2 + iconSize) : 0;
-        int topMargin1 = 2 + (ConfigData.drawIcon ? Math.max(0, (iconSize - fontRenderer.lineHeight) / 2) : 0);
-        int topMargin2 = 1 + Math.max(0, -(iconSize - fontRenderer.lineHeight) / 2);
+        int topMargin1 = 2 + (ConfigData.drawIcon ? Math.max(0, (iconSize - font.lineHeight) / 2) : 0);
+        int topMargin2 = 1 + Math.max(0, -(iconSize - font.lineHeight) / 2);
 
-        int lineHeight = fontRenderer.lineHeight;
+        int lineHeight = font.lineHeight;
         if (ConfigData.drawIcon)
             lineHeight = Math.max(2 + iconSize, lineHeight);
 
@@ -102,15 +102,16 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
             if (changeEntries.size() == 0)
                 return;
 
-            rectWidth = computeStrings(computedStrings, fontRenderer);
+            rectWidth = computeStrings(computedStrings, font);
 
             number = computedStrings.size();
             if (number == 0)
                 return;
         }
 
-        matrixStack.pushPose();
-        matrixStack.scale(ConfigData.drawScale, ConfigData.drawScale, 1);
+        var poseStack = graphics.pose();
+        poseStack.pushPose();
+        poseStack.scale(ConfigData.drawScale, ConfigData.drawScale, 1);
 
         rectWidth += rightMargin;
 
@@ -168,7 +169,7 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
         }
 
         int backgroundColor = ((int) Mth.clamp(mc.options.textBackgroundOpacity().get() * 255, 0, 255)) << 24;
-        fill(matrixStack,x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, backgroundColor);
+        graphics.fill(x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, backgroundColor);
 
         for (Triple<ChangeInfo, String[], Integer> e : computedStrings)
         {
@@ -181,7 +182,7 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
             for (int n = 0; n < strings.length; n++)
             {
                 String str = strings[n];
-                int wn = widths[n] = fontRenderer.width(str);
+                int wn = widths[n] = font.width(str);
                 w += wn;
             }
 
@@ -202,24 +203,24 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
             int wAcc = 0;
             for (int n = 0; n < strings.length; n++)
             {
-                fontRenderer.drawShadow(matrixStack, strings[n], x + leftMargin + wAcc, y + topMargin1, color);
+                graphics.drawString(font, strings[n], x + leftMargin + wAcc, y + topMargin1, color);
                 wAcc += widths[n];
             }
 
             if (ConfigData.drawIcon)
             {
-                matrixStack.pushPose();
-                matrixStack.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
-                matrixStack.scale(ConfigData.iconScale, ConfigData.iconScale, 1);
-                itemRenderer.renderAndDecorateItem(matrixStack, change.item.stack, 0, 0);
-                itemRenderer.renderGuiItemDecorations(matrixStack, fontRenderer, change.item.stack, 0, 0, null);
-                matrixStack.popPose();
+                poseStack.pushPose();
+                poseStack.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
+                poseStack.scale(ConfigData.iconScale, ConfigData.iconScale, 1);
+                graphics.renderItem(change.item.stack, 0, 0);
+                graphics.renderItemDecorations(font, change.item.stack, 0, 0, null);
+                poseStack.popPose();
             }
 
             y += lineHeight;
         }
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 
     private int computeStrings(List<Triple<ChangeInfo, String[], Integer>> computedStrings, Font font)
@@ -285,11 +286,11 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
             previous = null;
         }
 
-        if (player.level.dimension() != dim)
+        if (player.level().dimension() != dim)
         {
             previous = null;
             dimLoadTicks = 50;
-            dim = player.level.dimension();
+            dim = player.level().dimension();
         }
 
         if (dimLoadTicks > 0)
@@ -420,21 +421,21 @@ public class ScrollingOverlay extends GuiComponent implements IGuiOverlay
             return false;
         }
 
-        return !ItemStack.isSame(a, b);
+        return !ItemStack.isSameItem(a, b);
     }
 
     private static boolean areLooselyTheSame(ItemStack a, ItemStack b)
     {
         return a == b
                 || isStackEmpty(a) && isStackEmpty(b)
-                || ItemStack.isSame(a, b);
+                || ItemStack.isSameItem(a, b);
     }
 
     private static boolean areSameishItem(ItemStack a, ItemStack b)
     {
         return a == b
                 || (isStackEmpty(a) && isStackEmpty(b))
-                || (ItemStack.isSame(a, b) && ItemStack.tagMatches(a, b));
+                || ItemStack.isSameItemSameTags(a, b);
     }
 
     private static boolean isStackEmpty(ItemStack stack)
