@@ -2,7 +2,7 @@ package gigaherz.inventoryspam.config;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 public class ConfigData
 {
     public static final ClientConfig CLIENT;
-    public static final ForgeConfigSpec CLIENT_SPEC;
+    public static final ModConfigSpec CLIENT_SPEC;
     static {
-        final Pair<ClientConfig, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(ClientConfig::new);
+        final Pair<ClientConfig, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(ClientConfig::new);
         CLIENT_SPEC = specPair.getRight();
         CLIENT = specPair.getLeft();
     }
@@ -24,21 +24,21 @@ public class ConfigData
     {
         private static final Set<String> DRAW_POSITIONS = Arrays.stream(DrawPosition.values()).map(Enum::toString).collect(Collectors.toSet());
 
-        ForgeConfigSpec.BooleanValue showItemAdditions;
-        ForgeConfigSpec.BooleanValue showItemRemovals;
-        ForgeConfigSpec.BooleanValue drawIcon;
-        ForgeConfigSpec.BooleanValue drawName;
-        ForgeConfigSpec.ConfigValue<String> drawPosition;
-        ForgeConfigSpec.IntValue drawOffsetHorizontal;
-        ForgeConfigSpec.IntValue drawOffsetVertical;
-        ForgeConfigSpec.DoubleValue drawScale;
-        ForgeConfigSpec.DoubleValue iconScale;
-        ForgeConfigSpec.IntValue softLimit;
-        ForgeConfigSpec.IntValue fadeLimit;
-        ForgeConfigSpec.ConfigValue<List<? extends String>> ignoreItems;
-        ForgeConfigSpec.ConfigValue<List<? extends String>> ignoreSubitemChanges;
+        ModConfigSpec.BooleanValue showItemAdditions;
+        ModConfigSpec.BooleanValue showItemRemovals;
+        ModConfigSpec.BooleanValue drawIcon;
+        ModConfigSpec.BooleanValue drawName;
+        ModConfigSpec.ConfigValue<String> drawPosition;
+        ModConfigSpec.IntValue drawOffsetHorizontal;
+        ModConfigSpec.IntValue drawOffsetVertical;
+        ModConfigSpec.DoubleValue drawScale;
+        ModConfigSpec.DoubleValue iconScale;
+        ModConfigSpec.IntValue softLimit;
+        ModConfigSpec.IntValue fadeLimit;
+        ModConfigSpec.ConfigValue<List<? extends String>> ignoreItems;
+        ModConfigSpec.ConfigValue<List<? extends String>> ignoreSubitemChanges;
 
-        ClientConfig(ForgeConfigSpec.Builder builder)
+        ClientConfig(ModConfigSpec.Builder builder)
         {
             builder.push("general");
             ignoreItems = builder

@@ -2,35 +2,34 @@ package gigaherz.inventoryspam;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import gigaherz.inventoryspam.config.ConfigData;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RegisterGuiOverlaysEvent;
+import net.neoforged.neoforge.client.gui.overlay.ExtendedGui;
+import net.neoforged.neoforge.client.gui.overlay.IGuiOverlay;
+import net.neoforged.neoforge.client.gui.overlay.VanillaGuiOverlay;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Mod.EventBusSubscriber(value= Dist.CLIENT, modid=InventorySpam.MODID, bus= Mod.EventBusSubscriber.Bus.MOD)
@@ -40,7 +39,7 @@ public class ScrollingOverlay implements IGuiOverlay
     @SubscribeEvent
     public static void registerOverlay(RegisterGuiOverlaysEvent event)
     {
-        event.registerAbove(VanillaGuiOverlay.CHAT_PANEL.id(), "inventoryspam.overlay", new ScrollingOverlay());
+        event.registerAbove(VanillaGuiOverlay.CHAT_PANEL.id(), new ResourceLocation("inventoryspam","inventoryspam.overlay"), new ScrollingOverlay());
     }
 
     private static final int TTL = 240;
@@ -60,17 +59,25 @@ public class ScrollingOverlay implements IGuiOverlay
 
     public ScrollingOverlay()
     {
-        MinecraftForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.addListener(this::clientLogOut);
+        NeoForge.EVENT_BUS.addListener(this::clientTick);
     }
 
-    @SubscribeEvent
     public void clientLogOut(ClientPlayerNetworkEvent.LoggingOut event)
     {
         changeEntries.clear();
     }
 
+    public void clientTick(TickEvent.ClientTickEvent event)
+    {
+        if (event.phase != TickEvent.Phase.END)
+            return;
+
+        tick();
+    }
+
     @Override
-    public void render(ForgeGui gui, GuiGraphics graphics, float partialTicks, int width, int height)
+    public void render(ExtendedGui gui, GuiGraphics graphics, float partialTicks, int width, int height)
     {
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
@@ -92,7 +99,7 @@ public class ScrollingOverlay implements IGuiOverlay
 
         hard_limit = height / lineHeight;
 
-        List<Triple<ChangeInfo, String[], Integer>> computedStrings = Lists.newArrayList();
+        List<Triple<ChangeInfo, Component, Integer>> labels = Lists.newArrayList();
 
         int rectWidth;
         int number;
@@ -102,9 +109,9 @@ public class ScrollingOverlay implements IGuiOverlay
             if (changeEntries.size() == 0)
                 return;
 
-            rectWidth = computeStrings(computedStrings, font);
+            rectWidth = computeLabel(labels, font);
 
-            number = computedStrings.size();
+            number = labels.size();
             if (number == 0)
                 return;
         }
@@ -171,20 +178,13 @@ public class ScrollingOverlay implements IGuiOverlay
         int backgroundColor = ((int) Mth.clamp(mc.options.textBackgroundOpacity().get() * 255, 0, 255)) << 24;
         graphics.fill(x - 2, y - 2, x + rectWidth + 4, y + rectHeight + 4, backgroundColor);
 
-        for (Triple<ChangeInfo, String[], Integer> e : computedStrings)
+        for (Triple<ChangeInfo, Component, Integer> e : labels)
         {
             ChangeInfo change = e.getLeft();
-            String[] strings = e.getMiddle();
+            Component label = e.getMiddle();
             int fade = e.getRight();
 
-            int w = 0;
-            int[] widths = new int[strings.length];
-            for (int n = 0; n < strings.length; n++)
-            {
-                String str = strings[n];
-                int wn = widths[n] = font.width(str);
-                w += wn;
-            }
+            int w = font.width(label);
 
             int forcedFade = ConfigData.fadeLimit > 0 ? (fade * 255 / (ConfigData.fadeLimit + 2)) : 255;
             int ttlFade = change.ttl * 255 / FADE;
@@ -200,12 +200,7 @@ public class ScrollingOverlay implements IGuiOverlay
             };
 
             RenderSystem.enableBlend();
-            int wAcc = 0;
-            for (int n = 0; n < strings.length; n++)
-            {
-                graphics.drawString(font, strings[n], x + leftMargin + wAcc, y + topMargin1, color);
-                wAcc += widths[n];
-            }
+            graphics.drawString(font, label, x + leftMargin, y + topMargin1, color);
 
             if (ConfigData.drawIcon)
             {
@@ -223,7 +218,7 @@ public class ScrollingOverlay implements IGuiOverlay
         poseStack.popPose();
     }
 
-    private int computeStrings(List<Triple<ChangeInfo, String[], Integer>> computedStrings, Font font)
+    private int computeLabel(List<Triple<ChangeInfo, Component, Integer>> computedStrings, Font font)
     {
         int rectWidth = 0;
         int itemsToShow = Math.min(Math.min(hard_limit, ConfigData.softLimit + ConfigData.fadeLimit), changeEntries.size());
@@ -233,40 +228,35 @@ public class ScrollingOverlay implements IGuiOverlay
         for (int i = offset; i < changeEntries.size(); i++)
         {
             ChangeInfo change = changeEntries.get(i);
-            String[] parts = getChangeStrings(change);
+            var label = getChangeLabel(change);
 
-            int w = Arrays.stream(parts).mapToInt(font::width).sum();
+            int w = font.width(label);
 
             rectWidth = Math.max(rectWidth, w);
 
-            computedStrings.add(Triple.of(change, parts, Math.min(ConfigData.fadeLimit + 2, 1 + i - fadeOffset)));
+            computedStrings.add(Triple.of(change, label, Math.min(ConfigData.fadeLimit + 2, 1 + i - fadeOffset)));
         }
         return rectWidth;
     }
 
-    private String[] getChangeStrings(ChangeInfo change)
+    private Component getChangeLabel(ChangeInfo change)
     {
         String mode = change.mode == ChangeMode.Obtained ? "+" : "-";
-        String s1 = String.format("%s%d", mode, change.count);
+        var label = Component.literal(String.format("%s%d", mode, change.count));
         if (ConfigData.drawName)
         {
-            String name = change.item.stack.getHoverName().getString();
-            String italics = change.item.stack.hasCustomHoverName() ? "" + ChatFormatting.ITALIC : "";
-            String s2 = String.format("%s%s", italics, name);
-            return new String[]{s1, " ", s2};
+            label = label.append(Component.literal(" "));
+
+            var name = change.item.stack.getHoverName();
+            if (change.item.stack.hasCustomHoverName())
+                name = name.copy().withStyle(style -> style.withItalic(true));
+            label = label.append(name);
         }
-        else
-        {
-            return new String[]{s1};
-        }
+        return label;
     }
 
-    @SubscribeEvent
-    public void clientTick(TickEvent.ClientTickEvent event)
+    private void tick()
     {
-        if (event.phase != TickEvent.Phase.END)
-            return;
-
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
 
@@ -400,7 +390,7 @@ public class ScrollingOverlay implements IGuiOverlay
 
     private boolean isBlacklisted(ItemStack left)
     {
-        var name = ForgeRegistries.ITEMS.getKey(left.getItem());
+        var name = BuiltInRegistries.ITEM.getKey(left.getItem());
         if(name == null)
             return true;
         return ConfigData.ignoreItems.contains(name.toString());
@@ -414,7 +404,7 @@ public class ScrollingOverlay implements IGuiOverlay
         if (a == b || isStackEmpty(a) && isStackEmpty(b))
             return false;
 
-        var name = ForgeRegistries.ITEMS.getKey(a.getItem());
+        var name = BuiltInRegistries.ITEM.getKey(a.getItem());
         if (a.getItem() == b.getItem() && name != null && ConfigData.ignoreSubitemChanges.contains(name.toString()))
         {
             // If we are ignoring subitem changes, consider them the same.

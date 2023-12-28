@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[46,)"
+loaderVersion="[1,)"
 license="BSD (3 clause)"
 issueTrackerURL="https://github.com/gigaherz/InventorySpam/issues"
 
@@ -13,16 +13,20 @@ Shows the items added and removed from the inventory
 displayURL="https://github.com/gigaherz/InventorySpam"
 logoFile="logo.png"
 authors="gigaherz"
+displayTest="IGNORE_ALL_VERSION"
+
+[[mixins]]
+    config="inventoryspam.mixins.json"
 
 [[dependencies.inventoryspam]]
-    modId="forge"
-    mandatory=true
-    versionRange="[46.0.12,)"
+    modId="neoforge"
+    type="required"
+    versionRange="[20.4.16-beta,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.inventoryspam]]
     modId="minecraft"
-    mandatory=true
-    versionRange="[1.20,1.21)"
+    type="required"
+    versionRange="[1.20.4,1.21)"
     ordering="NONE"
     side="BOTH"

@@ -27,6 +27,7 @@ public abstract class PlayerContainerMixin extends RecipeBookMenu<CraftingContai
         super.initializeContents(i, stacks, held);
     }
 
+    @SuppressWarnings("MixinAnnotationTarget")
     @Inject(method = "initializeContents(ILjava/util/List;Lnet/minecraft/world/item/ItemStack;)V", at = @At("RETURN"))
     public void initializeContentsHook(int i, List<ItemStack> stacks, ItemStack held, CallbackInfo callbackInfo)
     {

@@ -1,13 +1,13 @@
 package gigaherz.inventoryspam;
 
 import gigaherz.inventoryspam.config.ConfigData;
-import net.minecraftforge.fml.IExtensionPoint;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.network.NetworkConstants;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.IExtensionPoint;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.network.NetworkConstants;
 
 @Mod(InventorySpam.MODID)
 public class InventorySpam
@@ -16,11 +16,11 @@ public class InventorySpam
 
     public static InventorySpam instance;
 
-    public InventorySpam()
+    public InventorySpam(IEventBus modEventBus)
     {
         instance = this;
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::readConfigs);
+        modEventBus.addListener(this::readConfigs);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigData.CLIENT_SPEC);
 
