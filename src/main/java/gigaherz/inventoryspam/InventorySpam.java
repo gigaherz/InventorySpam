@@ -2,8 +2,7 @@ package gigaherz.inventoryspam;
 
 import gigaherz.inventoryspam.config.ConfigData;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.IExtensionPoint;
-import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.config.ModConfigEvent;
@@ -15,13 +14,13 @@ public class InventorySpam
 
     public static InventorySpam instance;
 
-    public InventorySpam(IEventBus modEventBus)
+    public InventorySpam(ModContainer container, IEventBus modEventBus)
     {
         instance = this;
 
         modEventBus.addListener(this::readConfigs);
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigData.CLIENT_SPEC);
+        container.registerConfig(ModConfig.Type.CLIENT, ConfigData.CLIENT_SPEC);
     }
 
     public void readConfigs(ModConfigEvent event)

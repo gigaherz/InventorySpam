@@ -6,8 +6,10 @@ import gigaherz.inventoryspam.config.ConfigData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -19,12 +21,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.RegisterGuiOverlaysEvent;
-import net.neoforged.neoforge.client.gui.overlay.ExtendedGui;
-import net.neoforged.neoforge.client.gui.overlay.IGuiOverlay;
-import net.neoforged.neoforge.client.gui.overlay.VanillaGuiOverlay;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.TickEvent;
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,14 +32,14 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.List;
 
-@Mod.EventBusSubscriber(value= Dist.CLIENT, modid=InventorySpam.MODID, bus= Mod.EventBusSubscriber.Bus.MOD)
-public class ScrollingOverlay implements IGuiOverlay
+@EventBusSubscriber(value= Dist.CLIENT, modid=InventorySpam.MODID, bus= EventBusSubscriber.Bus.MOD)
+public class ScrollingOverlay implements LayeredDraw.Layer
 {
 
     @SubscribeEvent
-    public static void registerOverlay(RegisterGuiOverlaysEvent event)
+    public static void registerOverlay(RegisterGuiLayersEvent event)
     {
-        event.registerAbove(VanillaGuiOverlay.CHAT_PANEL.id(), new ResourceLocation("inventoryspam","inventoryspam.overlay"), new ScrollingOverlay());
+        event.registerAbove(VanillaGuiLayers.CHAT, new ResourceLocation("inventoryspam","inventoryspam.overlay"), new ScrollingOverlay());
     }
 
     private static final int TTL = 240;
@@ -76,14 +76,16 @@ public class ScrollingOverlay implements IGuiOverlay
         tick();
     }
 
+
+
     @Override
-    public void render(ExtendedGui gui, GuiGraphics graphics, float partialTicks, int width, int height)
+    public void render(GuiGraphics graphics, float partialTicks)
     {
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
 
-        width = (int) (width / ConfigData.drawScale);
-        height = (int) (height / ConfigData.drawScale);
+        var width = (int) (graphics.guiWidth() / ConfigData.drawScale);
+        var height = (int) (graphics.guiHeight() / ConfigData.drawScale);
 
         Font font = mc.font;
         ItemRenderer itemRenderer = mc.getItemRenderer();
@@ -248,7 +250,7 @@ public class ScrollingOverlay implements IGuiOverlay
             label = label.append(Component.literal(" "));
 
             var name = change.item.stack.getHoverName();
-            if (change.item.stack.hasCustomHoverName())
+            if (change.item.stack.has(DataComponents.CUSTOM_NAME))
                 name = name.copy().withStyle(style -> style.withItalic(true));
             label = label.append(name);
         }
@@ -425,7 +427,7 @@ public class ScrollingOverlay implements IGuiOverlay
     {
         return a == b
                 || (isStackEmpty(a) && isStackEmpty(b))
-                || ItemStack.isSameItemSameTags(a, b);
+                || ItemStack.isSameItemSameComponents(a, b);
     }
 
     private static boolean isStackEmpty(ItemStack stack)
