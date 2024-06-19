@@ -6,6 +6,8 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.RecipeBookMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.crafting.CraftingRecipe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(value = InventoryMenu.class, priority = 0)
-public abstract class PlayerContainerMixin extends RecipeBookMenu<CraftingContainer>
+public abstract class PlayerContainerMixin extends RecipeBookMenu<CraftingInput, CraftingRecipe>
 {
     public PlayerContainerMixin(MenuType<?> type, int id)
     {

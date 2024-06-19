@@ -3,6 +3,7 @@ package gigaherz.inventoryspam;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import gigaherz.inventoryspam.config.ConfigData;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,10 +24,10 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.TickEvent;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -36,10 +37,12 @@ import java.util.List;
 public class ScrollingOverlay implements LayeredDraw.Layer
 {
 
+    public static final ResourceLocation OVERLAY_ID = ResourceLocation.fromNamespaceAndPath("inventoryspam", "inventoryspam.overlay");
+
     @SubscribeEvent
     public static void registerOverlay(RegisterGuiLayersEvent event)
     {
-        event.registerAbove(VanillaGuiLayers.CHAT, new ResourceLocation("inventoryspam","inventoryspam.overlay"), new ScrollingOverlay());
+        event.registerAbove(VanillaGuiLayers.CHAT, OVERLAY_ID, new ScrollingOverlay());
     }
 
     private static final int TTL = 240;
@@ -68,18 +71,13 @@ public class ScrollingOverlay implements LayeredDraw.Layer
         changeEntries.clear();
     }
 
-    public void clientTick(TickEvent.ClientTickEvent event)
+    public void clientTick(ClientTickEvent.Post event)
     {
-        if (event.phase != TickEvent.Phase.END)
-            return;
-
         tick();
     }
 
-
-
     @Override
-    public void render(GuiGraphics graphics, float partialTicks)
+    public void render(GuiGraphics graphics, DeltaTracker partialTicks)
     {
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
@@ -88,7 +86,6 @@ public class ScrollingOverlay implements LayeredDraw.Layer
         var height = (int) (graphics.guiHeight() / ConfigData.drawScale);
 
         Font font = mc.font;
-        ItemRenderer itemRenderer = mc.getItemRenderer();
 
         int iconSize = (int) (16 * ConfigData.iconScale);
         int rightMargin = ConfigData.drawIcon ? (2 + iconSize) : 0;
