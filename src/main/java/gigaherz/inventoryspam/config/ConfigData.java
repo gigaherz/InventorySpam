@@ -28,7 +28,7 @@ public class ConfigData
         ModConfigSpec.BooleanValue showItemRemovals;
         ModConfigSpec.BooleanValue drawIcon;
         ModConfigSpec.BooleanValue drawName;
-        ModConfigSpec.ConfigValue<String> drawPosition;
+        ModConfigSpec.EnumValue<DrawPosition> drawPosition;
         ModConfigSpec.IntValue drawOffsetHorizontal;
         ModConfigSpec.IntValue drawOffsetVertical;
         ModConfigSpec.DoubleValue drawScale;
@@ -68,7 +68,7 @@ public class ConfigData
             drawPosition = builder
                     .comment("Which corner/edge of the screen to base the overlay position on")
                     .translation("text.inventoryspam.config.draw_position")
-                    .define("draw_position", DrawPosition.BottomRight::toString, (e) -> e instanceof String && DRAW_POSITIONS.contains(e));
+                    .defineEnum("draw_position", DrawPosition.BottomRight, DrawPosition.values());
             drawOffsetHorizontal = builder
                     .comment("Horizontal offset from the chosen position to draw the overlay on")
                     .translation("text.inventoryspam.config.draw_offset_horizontal")
@@ -142,7 +142,7 @@ public class ConfigData
         softLimit = CLIENT.softLimit.get();
         fadeLimit = CLIENT.fadeLimit.get();
 
-        drawPosition = DrawPosition.valueOf(CLIENT.drawPosition.get());
+        drawPosition = CLIENT.drawPosition.get();
 
         ignoreItems = Sets.newHashSet(CLIENT.ignoreItems.get());
         ignoreSubitemChanges = Sets.newHashSet(CLIENT.ignoreSubitemChanges.get());

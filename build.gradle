@@ -3,69 +3,80 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.145'
+    id 'net.neoforged.moddev' version '2.0.42-beta'
 }
 
-version = "1.6.0"
+version = "1.7.0"
 group = "gigaherz.inventoryspam"
 
-Provider<String> minecraftVersion(Transformer<String, String> mapper) {
-    return project.userDevRuntime.runtimes.map(r -> r.values().first().specification.minecraftVersion).map(mapper)
-}
-
+var minecraftVersionResolver = project.neoForge.version.map { "1." + (it =~ /^(\d+(?:\.[1-9]\d*|))\./)[0][1] }
 base {
-    archivesName = minecraftVersion { "InventorySpam-${it}" }
+    archivesName = minecraftVersionResolver.map { "InventorySpam-${it}" }
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
-}
+java.withSourcesJar()
 
-runs {
-    // applies to all the run configs below
-    configureEach {
-        systemProperty 'forge.logging.markers', '' // 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
+neoForge {
+    version = "21.3.19-beta"
 
-        workingDirectory project.file('run')
+    runs {
+        // applies to all the run configs below
+        configureEach {
+            gameDirectory = project.file('run')
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
 
-        modSource project.sourceSets.main
+        client {
+            client()
+        }
+
+        server {
+            server()
+        }
     }
 
-    client {
+    mods {
+        thismod {
+            sourceSet(sourceSets.main)
+        }
     }
 
-    server {
-    }
-}
-
-subsystems {
     parchment {
         minecraftVersion="1.20.6"
         mappingsVersion="2024.06.16"
     }
 }
 
-dependencies {
-    implementation 'net.neoforged:neoforge:21.0.20-beta'
-}
-
 jar {
-    from('/') {
-        include 'LICENSE.txt'
-    }
+    from(files('LICENSE.txt'))
 
     manifest {
         attributes([
                 "Specification-Title": "inventoryspam",
                 "Specification-Vendor": "gigaherz",
                 "Specification-Version": "1", // We are version 1 of ourselves
-                "Implementation-Title": project.name,
+                "Implementation-Title": "inventoryspam",
                 "Implementation-Version": project.version,
                 "Implementation-Vendor" :"gigaherz",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
+    }
+}
+
+tasks.named('sourcesJar') {
+    from(files('LICENSE.txt'))
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
     }
 }

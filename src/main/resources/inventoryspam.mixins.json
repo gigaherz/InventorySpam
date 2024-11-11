@@ -2,11 +2,11 @@
   "required": true,
   "minVersion": "0.8",
   "package": "gigaherz.inventoryspam.mixin",
-  "compatibilityLevel": "JAVA_16",
+  "compatibilityLevel": "JAVA_8",
   "refmap": "inventoryspam.refmap.json",
   "mixins": [],
   "client": [
-    "PlayerContainerMixin"
+    "AbstractContainerMenuMixin"
   ],
   "server": [],
   "injectors": {
