@@ -9,7 +9,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -30,13 +29,16 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.common.NeoForge;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @EventBusSubscriber(value= Dist.CLIENT, modid=InventorySpam.MODID, bus= EventBusSubscriber.Bus.MOD)
 public class ScrollingOverlay implements LayeredDraw.Layer
 {
-
     public static final ResourceLocation OVERLAY_ID = ResourceLocation.fromNamespaceAndPath("inventoryspam", "inventoryspam.overlay");
 
     @SubscribeEvent
@@ -198,7 +200,7 @@ public class ScrollingOverlay implements LayeredDraw.Layer
                 default -> 0;
             };
 
-            RenderSystem.enableBlend();
+            //RenderSystem.enableBlend();
             graphics.drawString(font, label, x + leftMargin, y + topMargin1, color);
 
             if (ConfigData.drawIcon)
@@ -206,8 +208,8 @@ public class ScrollingOverlay implements LayeredDraw.Layer
                 poseStack.pushPose();
                 poseStack.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
                 poseStack.scale(ConfigData.iconScale, ConfigData.iconScale, 1);
-                graphics.renderItem(change.item.stack, 0, 0);
-                graphics.renderItemDecorations(font, change.item.stack, 0, 0, null);
+                graphics.renderItem(change.stack, 0, 0);
+                graphics.renderItemDecorations(font, change.stack, 0, 0, null);
                 poseStack.popPose();
             }
 
@@ -240,17 +242,21 @@ public class ScrollingOverlay implements LayeredDraw.Layer
 
     private Component getChangeLabel(ChangeInfo change)
     {
-        String mode = change.mode == ChangeMode.Obtained ? "+" : "-";
+        var mode = change.mode == ChangeMode.Obtained ? "+" : "-";
         var label = Component.literal(String.format("%s%d", mode, change.count));
+
         if (ConfigData.drawName)
         {
             label = label.append(Component.literal(" "));
 
-            var name = change.item.stack.getHoverName();
-            if (change.item.stack.has(DataComponents.CUSTOM_NAME))
+            var name = change.stack.getHoverName();
+
+            if (change.stack.has(DataComponents.CUSTOM_NAME))
                 name = name.copy().withStyle(style -> style.withItalic(true));
+
             label = label.append(name);
         }
+
         return label;
     }
 
@@ -307,7 +313,8 @@ public class ScrollingOverlay implements LayeredDraw.Layer
             previous = new ItemStack[inventory.getContainerSize()];
             for (int i = 0; i < inventory.getContainerSize(); i++)
             {
-                previous[i] = safeCopy(inventory.getItem(i));
+                ItemStack stack = inventory.getItem(i);
+                previous[i] = stack.copy();
             }
 
             var currentMenu = player.containerMenu;
@@ -322,7 +329,7 @@ public class ScrollingOverlay implements LayeredDraw.Layer
         {
             ItemStack stack = inventory.getItem(i);
             ItemStack old = previous[i];
-            if (isChangeMeaningful(old, stack))
+            if (isChangeMeaningful(old, stack, true))
             {
                 changes.add(Pair.of(old, stack));
             }
@@ -331,7 +338,7 @@ public class ScrollingOverlay implements LayeredDraw.Layer
 
         var currentMenu = player.containerMenu;
         ItemStack stackInCursor = currentMenu.getCarried();
-        if (isChangeMeaningful(stackInCursor, previousInCursor))
+        if (isChangeMeaningful(stackInCursor, previousInCursor, true))
             changes.add(Pair.of(previousInCursor, stackInCursor));
         previousInCursor = stackInCursor.copy();
 
@@ -342,14 +349,10 @@ public class ScrollingOverlay implements LayeredDraw.Layer
         changes.forEach((change) ->
         {
             ItemStack left = change.getLeft();
-            boolean leftEmpty = left.getCount() <= 0;
-
             ItemStack right = change.getRight();
-            boolean rightEmpty = right.getCount() <= 0;
-
-            if (areSameishItem(left, right))
+            if (!isChangeMeaningful(left, right, false))
             {
-                if (!isBlacklisted(left))
+                if (isAllowed(left))
                 {
                     int difference = right.getCount() - left.getCount();
                     if (difference > 0)
@@ -360,11 +363,13 @@ public class ScrollingOverlay implements LayeredDraw.Layer
             }
             else
             {
-                if (!leftEmpty && !isBlacklisted(left))
+                boolean leftEmpty = left.isEmpty();
+                boolean rightEmpty = right.isEmpty();
+                if (!leftEmpty && isAllowed(left))
                 {
                     lostItem(changeList, left, left.getCount());
                 }
-                if (!rightEmpty && !isBlacklisted(right))
+                if (!rightEmpty && isAllowed(right))
                 {
                     obtainedItem(changeList, right, right.getCount());
                 }
@@ -381,60 +386,58 @@ public class ScrollingOverlay implements LayeredDraw.Layer
                 {
                     if (info.count == 0)
                         continue;
-                    accumulate(changeEntries, info.item.stack, info.mode, info.count, false);
+                    accumulate(changeEntries, info.stack, info.mode, info.count, false);
                 }
             }
         }
     }
 
-    private boolean isBlacklisted(ItemStack left)
+    private boolean isAllowed(ItemStack left)
     {
+        if (!BuiltInRegistries.ITEM.containsValue(left.getItem()))
+            return false;
         var name = BuiltInRegistries.ITEM.getKey(left.getItem());
-        if(name == null)
-            return true;
-        return ConfigData.ignoreItems.contains(name.toString());
+        return !ConfigData.ignoreItems.contains(name.toString());
     }
 
-    private boolean isChangeMeaningful(ItemStack a, ItemStack b)
+    private static boolean isChangeMeaningful(ItemStack a, ItemStack b, boolean includeCount)
     {
-        if (a.getCount() != b.getCount())
-            return true;
-
-        if (a == b || isStackEmpty(a) && isStackEmpty(b))
+        if (a == b)
             return false;
 
-        var name = BuiltInRegistries.ITEM.getKey(a.getItem());
-        if (a.getItem() == b.getItem() && name != null && ConfigData.ignoreSubitemChanges.contains(name.toString()))
+        if (a.isEmpty() && b.isEmpty())
+            return false;
+
+        if (includeCount && a.getCount() != b.getCount())
+            return true;
+
+        if (a.getItem() != b.getItem())
+            return true;
+
+        if (ConfigData.ignoreSubitemChanges.contains(a.getItem()))
         {
             // If we are ignoring subitem changes, consider them the same.
             return false;
         }
 
-        return !ItemStack.isSameItem(a, b);
-    }
+        var aComp = a.getComponents();
+        var bComp = b.getComponents();
+        var aKeys = aComp.keySet();
+        var bKeys = bComp.keySet();
+        if (!ConfigData.ignoreDataComponents.isEmpty())
+        {
+            aKeys = aKeys.stream().filter(Predicate.not(ConfigData.ignoreDataComponents::contains)).collect(Collectors.toSet());
+            bKeys = bKeys.stream().filter(Predicate.not(ConfigData.ignoreDataComponents::contains)).collect(Collectors.toSet());
+        }
+        if (!aKeys.equals(bKeys))
+            return true;
+        for(var key : aKeys)
+        {
+            if (!Objects.equals(aComp.get(key), bComp.get(key)))
+                return true;
+        }
 
-    private static boolean areLooselyTheSame(ItemStack a, ItemStack b)
-    {
-        return a == b
-                || isStackEmpty(a) && isStackEmpty(b)
-                || ItemStack.isSameItem(a, b);
-    }
-
-    private static boolean areSameishItem(ItemStack a, ItemStack b)
-    {
-        return a == b
-                || (isStackEmpty(a) && isStackEmpty(b))
-                || ItemStack.isSameItemSameComponents(a, b);
-    }
-
-    private static boolean isStackEmpty(ItemStack stack)
-    {
-        return stack.getCount() <= 0;
-    }
-
-    private static ItemStack safeCopy(ItemStack stack)
-    {
-        return stack.copy();
+        return false;
     }
 
     private void obtainedItem(List<ChangeInfo> changeList, ItemStack item, int added)
@@ -455,17 +458,14 @@ public class ScrollingOverlay implements LayeredDraw.Layer
 
     private void accumulate(List<ChangeInfo> changeList, ItemStack stack, ChangeMode mode, int count, boolean isLocal)
     {
-        if (stack.getCount() <= 0)
+        if (stack.isEmpty())
             return;
 
-        final ComparableItem name = new ComparableItem(stack);
-        ChangeInfo info = isLocal
-                ? changeList.stream().filter(e -> e.item.equals(name)).findFirst().orElse(null)
-                : changeList.stream().filter(e -> e.item.equals(name) && e.mode == mode).findFirst().orElse(null);
+        ChangeInfo info = findChangeInfo(changeList, stack, mode, isLocal);
+
         if (info == null)
         {
-            info = new ChangeInfo(name, mode, count, TTL);
-            changeList.add(info);
+            changeList.add(new ChangeInfo(copyWithoutExcludedComponents(stack), mode, count, TTL));
             return;
         }
 
@@ -484,16 +484,41 @@ public class ScrollingOverlay implements LayeredDraw.Layer
         }
     }
 
+    private ItemStack copyWithoutExcludedComponents(ItemStack stack)
+    {
+        var copy = stack.copy();
+        for(var c : ConfigData.ignoreDataComponents)
+            copy.remove(c);
+        return copy;
+    }
+
+    @Nullable
+    private static ChangeInfo findChangeInfo(List<ChangeInfo> changeList, ItemStack stack, ChangeMode mode, boolean isLocal)
+    {
+        ChangeInfo info = null;
+
+        for(final var entry : changeList)
+        {
+            if ((isLocal || entry.mode == mode)
+                    && !isChangeMeaningful(entry.stack, stack, false))
+            {
+                info = entry;
+                break;
+            }
+        }
+        return info;
+    }
+
     private static class ChangeInfo
     {
-        final ComparableItem item;
+        final ItemStack stack;
         ChangeMode mode;
         int count;
         int ttl;
 
-        ChangeInfo(ComparableItem item, ChangeMode mode, int count, int ttl)
+        ChangeInfo(ItemStack stack, ChangeMode mode, int count, int ttl)
         {
-            this.item = item;
+            this.stack = stack;
             this.mode = mode;
             this.count = count;
             this.ttl = ttl;
@@ -503,27 +528,5 @@ public class ScrollingOverlay implements LayeredDraw.Layer
     private enum ChangeMode
     {
         Obtained, Lost
-    }
-
-    private record ComparableItem(ItemStack stack)
-    {
-        public ComparableItem(ItemStack stack)
-        {
-            this.stack = stack.copy();
-            this.stack.setCount(1);
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            return obj instanceof ComparableItem other
-                    && areSameishItem(other.stack, this.stack);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return stack.getItem().hashCode();
-        }
     }
 }

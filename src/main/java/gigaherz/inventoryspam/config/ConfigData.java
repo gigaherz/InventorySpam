@@ -2,6 +2,13 @@ package gigaherz.inventoryspam.config;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -28,6 +35,7 @@ public class ConfigData
         ModConfigSpec.BooleanValue showItemRemovals;
         ModConfigSpec.BooleanValue drawIcon;
         ModConfigSpec.BooleanValue drawName;
+        ModConfigSpec.BooleanValue compactItems;
         ModConfigSpec.EnumValue<DrawPosition> drawPosition;
         ModConfigSpec.IntValue drawOffsetHorizontal;
         ModConfigSpec.IntValue drawOffsetVertical;
@@ -37,18 +45,27 @@ public class ConfigData
         ModConfigSpec.IntValue fadeLimit;
         ModConfigSpec.ConfigValue<List<? extends String>> ignoreItems;
         ModConfigSpec.ConfigValue<List<? extends String>> ignoreSubitemChanges;
+        ModConfigSpec.ConfigValue<List<? extends String>> ignoreDataComponents;
 
         ClientConfig(ModConfigSpec.Builder builder)
         {
             builder.push("general");
+            compactItems = builder
+                    .comment("When multiple items of the same type are in the display, always merge them, preserving only the shared data.")
+                    .translation("text.inventoryspam.config.compact_items")
+                    .define("compact_items", true);
             ignoreItems = builder
                     .comment("Items to ignore when finding changes")
                     .translation("text.inventoryspam.config.ignore_items")
-                    .defineList("ignore_items", Lists.newArrayList(), o -> o instanceof String);
+                    .defineList("ignore_items", Lists.newArrayList(), () -> "", o -> o instanceof String);
             ignoreSubitemChanges = builder
-                    .comment("Items for which to ignore NBT changes")
+                    .comment("Items for which to ignore data component differences")
                     .translation("text.inventoryspam.config.ignore_subitems")
-                    .defineList("ignore_subitem_changes", Lists.newArrayList(), o -> o instanceof String);
+                    .defineList("ignore_subitem_changes", Lists.newArrayList(), () -> "", o -> o instanceof String);
+            ignoreDataComponents = builder
+                    .comment("Data components to ignore when comparing")
+                    .translation("text.inventoryspam.config.ignore_data_components")
+                    .defineList("ignore_data_components", Lists.newArrayList("minecraft:damage"), () -> "", o -> o instanceof String);
             showItemAdditions = builder
                     .comment("Show gained items in the overlay")
                     .translation("text.inventoryspam.config.show_item_additions")
@@ -101,6 +118,7 @@ public class ConfigData
     public static boolean showItemRemovals = true;
     public static boolean drawIcon = true;
     public static boolean drawName = true;
+    public static boolean compactItems = false;
     public static int drawOffsetHorizontal;
     public static int drawOffsetVertical;
     public static DrawPosition drawPosition = DrawPosition.BottomRight;
@@ -109,8 +127,9 @@ public class ConfigData
     public static int softLimit = 10;
     public static int fadeLimit = 5;
 
-    public static Set<String> ignoreItems = Sets.newHashSet();
-    public static Set<String> ignoreSubitemChanges = Sets.newHashSet();
+    public static Set<Item> ignoreItems = Sets.newHashSet();
+    public static Set<Item> ignoreSubitemChanges = Sets.newHashSet();
+    public static Set<DataComponentType<?>> ignoreDataComponents = Sets.newHashSet();
 
     public enum DrawPosition
     {
@@ -127,24 +146,36 @@ public class ConfigData
 
     public static void refreshClient()
     {
-        showItemAdditions = CLIENT.showItemAdditions.get();
-        showItemRemovals = CLIENT.showItemRemovals.get();
+        showItemAdditions = CLIENT.showItemAdditions.getAsBoolean();
+        showItemRemovals = CLIENT.showItemRemovals.getAsBoolean();
 
-        drawIcon = CLIENT.drawIcon.get();
-        drawName = CLIENT.drawName.get();
+        drawIcon = CLIENT.drawIcon.getAsBoolean();
+        drawName = CLIENT.drawName.getAsBoolean();
 
-        drawOffsetHorizontal = CLIENT.drawOffsetHorizontal.get();
-        drawOffsetVertical = CLIENT.drawOffsetVertical.get();
+        drawOffsetHorizontal = CLIENT.drawOffsetHorizontal.getAsInt();
+        drawOffsetVertical = CLIENT.drawOffsetVertical.getAsInt();
 
         drawScale = CLIENT.drawScale.get().floatValue();
         iconScale = CLIENT.iconScale.get().floatValue();
 
-        softLimit = CLIENT.softLimit.get();
-        fadeLimit = CLIENT.fadeLimit.get();
+        softLimit = CLIENT.softLimit.getAsInt();
+        fadeLimit = CLIENT.fadeLimit.getAsInt();
 
         drawPosition = CLIENT.drawPosition.get();
 
-        ignoreItems = Sets.newHashSet(CLIENT.ignoreItems.get());
-        ignoreSubitemChanges = Sets.newHashSet(CLIENT.ignoreSubitemChanges.get());
+        compactItems = CLIENT.compactItems.getAsBoolean();
+
+        ignoreItems = CLIENT.ignoreItems.get().stream()
+                .map(name ->
+                        BuiltInRegistries.ITEM.get(ResourceLocation.parse(name)).map(Holder.Reference::value).orElse(null))
+                .collect(Collectors.toSet());
+        ignoreSubitemChanges = CLIENT.ignoreSubitemChanges.get().stream()
+                .map(name ->
+                        BuiltInRegistries.ITEM.get(ResourceLocation.parse(name)).map(Holder.Reference::value).orElse(null))
+                .collect(Collectors.toSet());;
+        ignoreDataComponents = CLIENT.ignoreDataComponents.get().stream()
+                .map(name ->
+                        BuiltInRegistries.DATA_COMPONENT_TYPE.get(ResourceLocation.parse(name)).map(Holder.Reference::value).orElse(null))
+                .collect(Collectors.toSet());;
     }
 }

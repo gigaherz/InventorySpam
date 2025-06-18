@@ -3,24 +3,19 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.42-beta'
+    id 'net.neoforged.moddev' version '2.0.88'
 }
 
-version = "1.7.0"
+neoForge.version = "21.5.75"
+version = "1.8.0"
 group = "gigaherz.inventoryspam"
-
-var minecraftVersionResolver = project.neoForge.version.map { "1." + (it =~ /^(\d+(?:\.[1-9]\d*|))\./)[0][1] }
-base {
-    archivesName = minecraftVersionResolver.map { "InventorySpam-${it}" }
-}
+base.archivesName = "InventorySpam-${neoForge.minecraftVersion}"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 java.withSourcesJar()
 
 neoForge {
-    version = "21.3.19-beta"
-
     runs {
         // applies to all the run configs below
         configureEach {
@@ -44,8 +39,8 @@ neoForge {
     }
 
     parchment {
-        minecraftVersion="1.20.6"
-        mappingsVersion="2024.06.16"
+        minecraftVersion="1.21.5"
+        mappingsVersion="2025.06.01"
     }
 }
 
