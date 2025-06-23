@@ -7,7 +7,6 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -25,6 +24,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.GuiLayer;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.common.NeoForge;
 import org.apache.commons.lang3.tuple.Pair;
@@ -36,8 +36,8 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@EventBusSubscriber(value= Dist.CLIENT, modid=InventorySpam.MODID, bus= EventBusSubscriber.Bus.MOD)
-public class ScrollingOverlay implements LayeredDraw.Layer
+@EventBusSubscriber(value= Dist.CLIENT, modid=InventorySpam.MODID)
+public class ScrollingOverlay implements GuiLayer
 {
     public static final ResourceLocation OVERLAY_ID = ResourceLocation.fromNamespaceAndPath("inventoryspam", "inventoryspam.overlay");
 
@@ -118,8 +118,8 @@ public class ScrollingOverlay implements LayeredDraw.Layer
         }
 
         var poseStack = graphics.pose();
-        poseStack.pushPose();
-        poseStack.scale(ConfigData.drawScale, ConfigData.drawScale, 1);
+        poseStack.pushMatrix();
+        poseStack.scale(ConfigData.drawScale, ConfigData.drawScale);
 
         rectWidth += rightMargin;
 
@@ -205,18 +205,18 @@ public class ScrollingOverlay implements LayeredDraw.Layer
 
             if (ConfigData.drawIcon)
             {
-                poseStack.pushPose();
-                poseStack.translate(x + 2 + w + leftMargin, y + topMargin2, 0);
-                poseStack.scale(ConfigData.iconScale, ConfigData.iconScale, 1);
+                poseStack.pushMatrix();
+                poseStack.translate(x + 2 + w + leftMargin, y + topMargin2);
+                poseStack.scale(ConfigData.iconScale, ConfigData.iconScale);
                 graphics.renderItem(change.stack, 0, 0);
                 graphics.renderItemDecorations(font, change.stack, 0, 0, null);
-                poseStack.popPose();
+                poseStack.popMatrix();
             }
 
             y += lineHeight;
         }
 
-        poseStack.popPose();
+        poseStack.popMatrix();
     }
 
     private int computeLabel(List<Triple<ChangeInfo, Component, Integer>> computedStrings, Font font)

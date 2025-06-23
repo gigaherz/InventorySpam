@@ -3,11 +3,11 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.88'
+    id 'net.neoforged.moddev' version '2.0.95'
 }
 
-neoForge.version = "21.5.75"
-version = "1.8.0"
+neoForge.version = "21.6.11-beta"
+version = "1.9.0"
 group = "gigaherz.inventoryspam"
 base.archivesName = "InventorySpam-${neoForge.minecraftVersion}"
 
