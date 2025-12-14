@@ -7,7 +7,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
@@ -167,15 +167,15 @@ public class ConfigData
 
         ignoreItems = CLIENT.ignoreItems.get().stream()
                 .map(name ->
-                        BuiltInRegistries.ITEM.get(ResourceLocation.parse(name)).map(Holder.Reference::value).orElse(null))
+                        BuiltInRegistries.ITEM.get(Identifier.parse(name)).map(Holder.Reference::value).orElse(null))
                 .collect(Collectors.toSet());
         ignoreSubitemChanges = CLIENT.ignoreSubitemChanges.get().stream()
                 .map(name ->
-                        BuiltInRegistries.ITEM.get(ResourceLocation.parse(name)).map(Holder.Reference::value).orElse(null))
+                        BuiltInRegistries.ITEM.get(Identifier.parse(name)).map(Holder.Reference::value).orElse(null))
                 .collect(Collectors.toSet());;
         ignoreDataComponents = CLIENT.ignoreDataComponents.get().stream()
                 .map(name ->
-                        BuiltInRegistries.DATA_COMPONENT_TYPE.get(ResourceLocation.parse(name)).map(Holder.Reference::value).orElse(null))
+                        BuiltInRegistries.DATA_COMPONENT_TYPE.get(Identifier.parse(name)).map(Holder.Reference::value).orElse(null))
                 .collect(Collectors.toSet());;
     }
 }
