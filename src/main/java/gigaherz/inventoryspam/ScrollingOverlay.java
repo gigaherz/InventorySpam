@@ -6,7 +6,7 @@ import gigaherz.inventoryspam.config.ConfigData;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -79,7 +79,7 @@ public class ScrollingOverlay implements GuiLayer
     }
 
     @Override
-    public void render(GuiGraphics graphics, DeltaTracker partialTicks)
+    public void render(GuiGraphicsExtractor graphics, DeltaTracker partialTicks)
     {
         if (!ConfigData.showItemAdditions && !ConfigData.showItemRemovals)
             return;
@@ -201,15 +201,15 @@ public class ScrollingOverlay implements GuiLayer
             };
 
             //RenderSystem.enableBlend();
-            graphics.drawString(font, label, x + leftMargin, y + topMargin1, color);
+            graphics.text(font, label, x + leftMargin, y + topMargin1, color);
 
             if (ConfigData.drawIcon)
             {
                 poseStack.pushMatrix();
                 poseStack.translate(x + 2 + w + leftMargin, y + topMargin2);
                 poseStack.scale(ConfigData.iconScale, ConfigData.iconScale);
-                graphics.renderItem(change.stack, 0, 0);
-                graphics.renderItemDecorations(font, change.stack, 0, 0, null);
+                graphics.item(change.stack, 0, 0);
+                graphics.itemDecorations(font, change.stack, 0, 0, null);
                 poseStack.popMatrix();
             }
 
