@@ -14,7 +14,7 @@ import java.util.List;
 public abstract class AbstractContainerMenuMixin
 {
     @Inject(method = "initializeContents(ILjava/util/List;Lnet/minecraft/world/item/ItemStack;)V", at = @At("RETURN"))
-    public void initializeContentsHook(int id, List<ItemStack> items, ItemStack carried, CallbackInfo callbackInfo)
+    public void initializeContentsHook(int stateId, List<ItemStack> items, ItemStack carried, CallbackInfo callbackInfo)
     {
         if ((Object)this instanceof InventoryMenu inv)
         {

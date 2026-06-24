@@ -6,8 +6,8 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.141'
 }
 
-neoForge.version = "26.1.0.7-beta"
-version = "1.11.0"
+neoForge.version = "26.2.0.7-beta"
+version = "1.12.0"
 group = "gigaherz.inventoryspam"
 base.archivesName = "InventorySpam-${neoForge.minecraftVersion}"
 
